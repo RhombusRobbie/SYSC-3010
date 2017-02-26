@@ -6,7 +6,7 @@ public class main
     /**
      * Constructor for objects of class main
      */
-    public static void main(String args[])
+    public static void main(String args[]) throws Exception
     {
            DB db = new DB();
            db.createTable();
