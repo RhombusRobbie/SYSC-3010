@@ -5,7 +5,7 @@ import java.util.*;
 import javax.swing.JOptionPane;
 
 
-public class Login extends JFrame {
+public class Login {
     private class User{
         String name;
         int pass;
@@ -15,15 +15,18 @@ public class Login extends JFrame {
         }
     }
     //User[] userArray = new User[10]; // up to 10 users
-    
-    public Login(){
+    JFrame fr;
+    mainFrame mf;
+    public Login(mainFrame mf){
+       this.mf = mf;
+       fr = new JFrame();
        JButton login = new JButton("Login");
        JButton signup = new JButton("SignUp");
        JPanel panel = new JPanel();
        JTextField txuser = new JTextField(15);
        JPasswordField pass = new JPasswordField(15);
-       setSize(300,200);
-       setLocation(500,280);
+       fr.setSize(300,200);
+       fr.setLocation(500,280);
        panel.setLayout (null); 
         
         
@@ -37,9 +40,9 @@ public class Login extends JFrame {
        panel.add(txuser);
        panel.add(pass);
         
-       getContentPane().add(panel);
-       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-       setVisible(true);
+       fr.getContentPane().add(panel);
+       fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+       fr.setVisible(true);
        
        login.addActionListener(new ActionListener(){
           public void actionPerformed(ActionEvent ae){
@@ -47,9 +50,9 @@ public class Login extends JFrame {
               String ppaswd = new String(pass.getPassword());
               if((new DB()).contains(puname, ppaswd) == 1){
                   // true password and username
-                  mainFrame regFace = new mainFrame();
-                  regFace.setVisible(true);
-                  dispose();
+                  //.setVisible(true);
+                  mf.setVisible(true);
+                  fr.dispose();
                 }else{
                     // not true
                     
@@ -68,9 +71,9 @@ public class Login extends JFrame {
         signup.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent ae){
                 //
-                SignUp signup = new SignUp();
+                SignUp signup = new SignUp(mf);
                 signup.setVisible(true);
-                dispose();
+                fr.dispose();
                
             }
             
@@ -85,24 +88,5 @@ public class Login extends JFrame {
     
     
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
