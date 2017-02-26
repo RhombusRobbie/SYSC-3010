@@ -4,19 +4,17 @@ import java.awt.event.*;
 
 
 public class SignUp extends JFrame {
-
-public static void main(String[] args) {
-    SignUp frameTabe2 = new SignUp();
-}
     
    JLabel welcome = new JLabel("Please fill the fields below.");
    JPanel panel = new JPanel();
    JTextField txuser;
    JPasswordField pass;
    Login lgn;
-SignUp(){
-    
+   mainFrame mf;
+SignUp(mainFrame mf){
     super("Sign Up");
+    this.mf = mf;
+    
     JButton signup = new JButton("SignUp");
     txuser = new JTextField(15);
     pass = new JPasswordField(15);
@@ -49,10 +47,9 @@ SignUp(){
     signup.addActionListener(new ActionListener(){
     public void actionPerformed(ActionEvent ae){
         //
-        Login lgn = new Login();
+        Login lgn = new Login(mf);
         String str = new String(pass.getPassword());
         (new DB()).setUser(txuser.getText(), str);
-        lgn.setVisible(true);
         dispose();
        
     }
