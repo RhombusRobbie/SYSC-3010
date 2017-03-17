@@ -54,7 +54,7 @@ public class DB {
    public String contains(String keyword){
       try{
           Connection con = getConnection();
-          PreparedStatement statement = con.prepareStatement("SELECT name,pass FROM table2");
+          PreparedStatement statement = con.prepareStatement("SELECT keyword,emotion FROM table2");
           ResultSet result = statement.executeQuery();
           while(result.next()){
               if(result.getString("keyword").equals(keyword)){
