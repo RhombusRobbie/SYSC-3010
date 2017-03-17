@@ -1,4 +1,7 @@
- 
+ /*
+ * table1 -> name,pass
+ * table2 -> keyword
+ */
 import java.sql.*;
  
 public class DB {
@@ -8,6 +11,9 @@ public class DB {
            Connection con = getConnection();
            PreparedStatement create = con.prepareStatement("CREATE TABLE IF NOT EXISTS table1 (name varchar(15), pass varchar(15))");
            create.executeUpdate();
+           create = con.prepareStatement("CREATE TABLE IF NOT EXISTS table2 (keyword varchar(15)");
+           create.executeUpdate();
+        
         }catch(Exception e){System.out.println(e);} 
        finally{System.out.println("Function complete.");};
     }
@@ -45,6 +51,22 @@ public class DB {
         }catch(Exception e){System.out.println(e);}
         return 0;
     }
+   public int contains(String keyword){
+      try{
+          Connection con = getConnection();
+          PreparedStatement statement = con.prepareStatement("SELECT name,pass FROM table1");
+          ResultSet result = statement.executeQuery();
+          while(result.next()){
+              if(result.getString("keyword").equals(keyword)){
+                  return 1;
+                }
+              
+            }
+            return 0;
+        }catch(Exception e){System.out.println(e);}
+        return 0;
+    }
+
   public void setUser(String user, String pass){
       try{
           Connection con = getConnection();
