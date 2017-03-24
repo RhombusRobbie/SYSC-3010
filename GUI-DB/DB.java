@@ -1,6 +1,7 @@
  /*
  * table1 -> name,pass
  * table2 -> keyword
+ * history -> event
  */
 import java.sql.*;
  
