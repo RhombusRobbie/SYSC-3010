@@ -13,8 +13,9 @@ public class DB {
            create.executeUpdate();
            create = con.prepareStatement("CREATE TABLE IF NOT EXISTS table2 (keyword varchar(15), emotion varchar(15)");
            create.executeUpdate();
-        
-        }catch(Exception e){System.out.println(e);} 
+           create = con.prepareStatement("CREATE TABLE IF NOT EXISTS history (event text");
+           create.executeUpdate();
+        }catch(Exception e){System.out.println("Cannot create tables"); System.exit(1);} 
        finally{System.out.println("Function complete.");};
     }
    
@@ -31,7 +32,7 @@ public class DB {
            System.out.println("Connected");
            return conn;
         }catch(Exception e){
-            System.out.println(e);
+            System.out.println("Cannot establish connection to Database"); System.exit(1);
         }
        return null;
     }
@@ -48,7 +49,7 @@ public class DB {
               
             }
             return 0;
-        }catch(Exception e){System.out.println(e);}
+        }catch(Exception e){System.out.println("contains(user,pass): Error");System.exit(1);}
         return 0;
     }
    public String contains(String keyword){
@@ -63,7 +64,7 @@ public class DB {
               
             }
             return null;
-        }catch(Exception e){System.out.println(e);}
+        }catch(Exception e){System.out.println("contains(keyword): Error");System.exit(1);}
         return null;
     }
 
@@ -73,7 +74,7 @@ public class DB {
           PreparedStatement posted = con.prepareStatement("INSERT INTO table1 (name, pass) VALUES ('"+user+"', '"+pass+"')");
           posted.executeUpdate();
         }catch(Exception e){
-            System.out.println(e);
+        	System.out.println("setUser(user,pass): Error");System.exit(1);
         }
         finally{
             System.out.println("Insert Complete.");};
