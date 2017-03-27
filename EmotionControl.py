@@ -2,9 +2,22 @@ from time import sleep
 import pifacedigitalio, socket, sys
 
 """
+	SYSC 3010 Sherlock Emotion Control
+	
+	Author: Robert Graham
+		100981086
+		Group F3
+	Date: 	26 March 2017
+	
+	Controller for the emotions of Sherlock. i.e. Two stepper motors
+	which control the position of the eyebrows and mouth seperately.
+	Emotion codes are recieved by the server and then emotions are updated
+	accordingly. Sherlock starts out in a default emotion and returns to
+	that emotion when shut down so that the state is always known.
+	
 	For all degrees
 	Positive: counter-clockwise
-	Negative: clockwise.
+	Negative: clockwise
 """
 
 UDP_IP = "127.0.0.1"
@@ -32,7 +45,7 @@ DEFAULT_POS = NEUTRAL_POS
 
 """
 	Rotates the eyebrows by the specified amount of degrees. Eyebrow
-	Stepper motor must be connected to pins 4-8.
+	stepper motor must be connected to pins 4-8.
 """
 def moveEyebrows(degrees):
     steps = int(float(degrees) / 360 * 512)
