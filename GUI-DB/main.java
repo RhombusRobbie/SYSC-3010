@@ -7,7 +7,7 @@ import java.net.DatagramPacket;
 import java.lang.Object;
 import java.lang.System;
 import java.net.InetAddress;
-
+import com.google.code.chatterbotapi.*;
 
 
 public class main
@@ -21,6 +21,9 @@ public class main
 	static DB db;
 	static InetAddress appAddress, commAddress; // taken by input
 	static int appPort, commPort; // taking by input
+	static ChatterBotSession botSession;
+	static final String pandorabotAPI = "b0dafd24ee35a477";
+	static String msg;
 	
     /**
      * Constructor for objects of class main
@@ -28,11 +31,17 @@ public class main
     public static void main(String args[])throws Exception
     {
            db = new DB();
-           db.createTable();
            mf = new mainFrame();
-           Login lgn = new Login(mf);
+           Login lgn = new Login(mf,db);
            
-           //-----------------------//
+           //------------ Bot Initialize --------//
+           ChatterBotFactory factory = new ChatterBotFactory();
+           ChatterBot bot = factory.create(ChatterBotType.PANDORABOTS, pandorabotAPI);
+           botSession = bot.createSession();
+           //-----------------------------------//
+           
+           
+           
            // wait to receive something
         try{   
            int p = Integer.parseInt(args[0]);
@@ -55,21 +64,27 @@ public class main
                case 1:
             	// from communicator
             	   System.out.println("Received from: Communicator");
-            	   if(Search(packet)){
+            	   if(dbSearch(packet)){
             		   // keyword found
             		   // 1) add event to history Database, 2) notify App.
-            		   Update("Keyword matched with one in list, he/she feels "+emotion);
+            		   Update("Keyword matched with one in list, he/she feels "+ emotion);
             	   }
+            	   
             	   // normal communication sending back random sentence.
-            	   sendPacket((new Magic8Ball(emotion)).getNext(), commAddress, commPort);
+            	   sendPacket(botSession.think(msg), commAddress, commPort);
             	   
             	   
                case 2:
                 // from game
             	   System.out.println("Received from: Game");
+            	   // pass it to Communicator.
                case 3:
                 // from mobile app
             	   System.out.println("Received from: App");
+            	   /** TODO:
+            	    * 1) login verification.
+            	    * 2) access to DB history log.
+            	    */
                default:
                 //invalid request.
             	   System.out.println("Received from: ERROR.");
@@ -91,17 +106,11 @@ public class main
     public static void Update(String event){
     	// first adding it to main frame, then database.
     	mf.update(event);
-    	try{
-    		Connection con = DB.getConnection();
-    		PreparedStatement posted = con.prepareStatement("INSERT INTO history (event) VALUES ('"+event+"')");
-    		posted.executeUpdate();
-    	}catch(Exception e){ System.out.println(e);
-    	}finally{
-            System.out.println("Insert Complete.");};
+    	db.setEvent(event);
     	
-    	// sending notification to App after here.
-            sendPacket(event, appAddress, appPort);
-    	
+    	// sending notification to App after here.//
+        
+    	//----------------------------------------//
     }
     
     
@@ -113,22 +122,17 @@ public class main
      * @return true, if keyword in packet matched with keyword in Database.
      * @return false, otherwise.
      */
-    public static boolean Search(DatagramPacket p){
+    public static boolean dbSearch(DatagramPacket p){
     	byte[] data = new byte[p.getLength()-1];
     	System.arraycopy(p.getData(), 1, data, 0, p.getLength());
-    	String str = data.toString();
-    	String[] keywords = str.split("/"); // ask alex what regex is using.
+    	msg = data.toString();
+    	String[] keywords = msg.split("/"); // ask alex what regex is using.
     	for(String s: keywords){
-    		if((emotion=db.contains(s)) != null){
+    		if((emotion=db.getEmotion(s)) != null){
     			return true;
-    			
     		}
-    		
     	}
-    	
-    	
     	return false;
-    	
     }
     
     public static void sendPacket(String e, InetAddress ip, int port){
