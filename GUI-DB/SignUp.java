@@ -11,10 +11,11 @@ public class SignUp extends JFrame {
    JPasswordField pass;
    Login lgn;
    mainFrame mf;
-SignUp(mainFrame mf){
+   DB db;
+SignUp(mainFrame mf, DB db){
     super("Sign Up");
     this.mf = mf;
-    
+    this.db = db;
     JButton signup = new JButton("SignUp");
     txuser = new JTextField(15);
     pass = new JPasswordField(15);
@@ -47,9 +48,9 @@ SignUp(mainFrame mf){
     signup.addActionListener(new ActionListener(){
     public void actionPerformed(ActionEvent ae){
         //
-        Login lgn = new Login(mf);
+        Login lgn = new Login(mf,db);
         String str = new String(pass.getPassword());
-        (new DB()).setUser(txuser.getText(), str);
+        db.setUser(txuser.getText(), str);
         dispose();
        
     }
