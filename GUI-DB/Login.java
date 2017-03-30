@@ -6,19 +6,14 @@ import javax.swing.JOptionPane;
 
 
 public class Login {
-    private class User{
-        String name;
-        int pass;
-        User(String name, int pass){
-            this.name = name;
-            this.pass = pass;
-        }
-    }
+
     //User[] userArray = new User[10]; // up to 10 users
     JFrame fr;
     mainFrame mf;
-    public Login(mainFrame mf){
+    DB db;
+    public Login(mainFrame mf, DB db){
        this.mf = mf;
+       this.db = db;
        fr = new JFrame();
        JButton login = new JButton("Login");
        JButton signup = new JButton("SignUp");
@@ -48,7 +43,7 @@ public class Login {
           public void actionPerformed(ActionEvent ae){
               String puname = txuser.getText();
               String ppaswd = new String(pass.getPassword());
-              if((new DB()).contains(puname, ppaswd) == 1){
+              if(db.contains(puname, ppaswd)){
                   // true password and username
                   //.setVisible(true);
                   mf.setVisible(true);
@@ -71,7 +66,7 @@ public class Login {
         signup.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent ae){
                 //
-                SignUp signup = new SignUp(mf);
+                SignUp signup = new SignUp(mf, db);
                 signup.setVisible(true);
                 fr.dispose();
                
@@ -79,14 +74,9 @@ public class Login {
             
         }
         );
-        
-        
-        
-        
-       
+
     }
     
     
 }
-
 
