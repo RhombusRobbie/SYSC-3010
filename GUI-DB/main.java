@@ -15,7 +15,7 @@ public class main
     // instance variables - replace the example below with your own
     static mainFrame mf;
     static DatagramSocket socket;
-    private final static int PACKETSIZE = 100 , serverID = 5;
+    private final static int PACKETSIZE = 100 , serverID = 5, serverPort = 2008;
 	static String[] str;
 	static String emotion = "";
 	static DB db;
@@ -51,14 +51,14 @@ public class main
            
            // wait to receive something
         try{   
-           int p = Integer.parseInt(args[0]);
-           socket = new DatagramSocket(p);
+           
+           socket = new DatagramSocket(serverPort);
            
            
         
            for(;;){
                
-           System.out.println( "Receiving on port " + p ) ;
+           System.out.println( "Receiving on port " + serverPort ) ;
            
            DatagramPacket packet = new DatagramPacket( new byte[PACKETSIZE], PACKETSIZE ) ;
            
