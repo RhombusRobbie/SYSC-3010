@@ -55,7 +55,7 @@ pfd = pifacedigitalio.PiFaceDigital()
 
 """
 	Rotates the eyebrows by the specified amount of degrees. Eyebrow
-	Stepper motor must be connected to pins 4-8.
+	stepper motor must be connected to pins 4-8.
 """
 def moveEyebrows(degrees):
 	# Double the amount of steps required. Double because two steps are
