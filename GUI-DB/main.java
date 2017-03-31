@@ -83,11 +83,20 @@ public class main
             		   // 1) add event to history Database, 2) notify App.
             		   Update("Keyword matched with one in list, he/she feels "+ emotion);
             	   }
+            	   /**
+            	    *  PROBLEM: we need to know what emotion should be given based on bot answer.
+            	    */
             	   
-            	   // normal communication sending back random sentence.
-            	   // we need to know what emotion should be given based on bot answer.
-            	   sendPacket(botSession.think(message), commAddress, commPort);
-            	   
+            	   if(message.contains("game") && message.contains("play")){
+            		   // play game.
+            		   // send activation packet.
+            	   }else if(message.contains("game") && (message.contains("stop") || message.contains("quit"))){
+            		   // stop game.
+            		   // send termination packet.
+            	   }else{
+                	   // normal communication sending back random sentence.            		   
+            		   sendPacket(serverID + botSession.think(message), commAddress, commPort);
+            	   }
             	   
                case 2:
                 // from game
@@ -99,15 +108,9 @@ public class main
             		   // flag to 1
             		   initialCommunicationFlags[1] = 1;
             	   }
-            	   
-            	   
-            	   
-            	   
-            	   
-            	   
-            	   
-            	   
             	   // pass it to Communicator.
+            	   sendPacket(new String(packet.getData()), commAddress, commPort);
+
                case 3:
                 // from mobile app
             	   System.out.println("Received from: App");
@@ -126,10 +129,10 @@ public class main
             	   // login verification.
             	   if(db.contains(login[0], login[1])){
             		   // send back YES message.
-            		   sendPacket("YES", appAddress, appPort);
+            		   sendPacket(serverID+"YES", appAddress, appPort);
             	   }else{
             		   // send back NO message.
-            		   sendPacket("NO", appAddress, appPort);
+            		   sendPacket(serverID+"NO", appAddress, appPort);
             	   }
                case 4:
             	   // from emotionController
@@ -165,7 +168,7 @@ public class main
     	db.setEvent(event);
     	
     	// sending notification to App after here.//
-    	sendPacket(event, appAddress, appPort);
+    	sendPacket(serverID+ event, appAddress, appPort);
     	//----------------------------------------//
     }
     
@@ -223,9 +226,7 @@ public class main
     
     public static void sendPacket(String e, InetAddress ip, int port){
     	byte[] data = new byte[e.length()+1];
-    	data[0] = 5; // id
-        byte[] dataHolder = e.getBytes();
-        System.arraycopy(dataHolder, 0, data, 1, data.length);
+        data = e.getBytes();
         
         DatagramPacket p = new DatagramPacket(data, 0, data.length, ip, port);
     	try{
