@@ -99,6 +99,14 @@ public class main
             		   // flag to 1
             		   initialCommunicationFlags[1] = 1;
             	   }
+            	   
+            	   
+            	   
+            	   
+            	   
+            	   
+            	   
+            	   
             	   // pass it to Communicator.
                case 3:
                 // from mobile app
@@ -110,9 +118,19 @@ public class main
             		   // flag to 1
             		   initialCommunicationFlags[2] = 1;
             	   }
-            	   /** TODO:
-            	    * 1) login verification.
-            	    */
+            	   // extracting packet's data.//
+            	    byte[] data = new byte[packet.getLength()-1];
+               		System.arraycopy(packet.getData(), 1, data, 0, packet.getLength());
+               		String[] login = (new String(data)).trim().split(" "); // username at [0], password at [1]
+               		//-------------------------//
+            	   // login verification.
+            	   if(db.contains(login[0], login[1])){
+            		   // send back YES message.
+            		   sendPacket("YES", appAddress, appPort);
+            	   }else{
+            		   // send back NO message.
+            		   sendPacket("NO", appAddress, appPort);
+            	   }
                case 4:
             	   // from emotionController
             	   System.out.println("Received from: EmotionControl");
@@ -147,7 +165,7 @@ public class main
     	db.setEvent(event);
     	
     	// sending notification to App after here.//
-        
+    	sendPacket(event, appAddress, appPort);
     	//----------------------------------------//
     }
     
@@ -204,7 +222,11 @@ public class main
 	}
     
     public static void sendPacket(String e, InetAddress ip, int port){
-        byte[] data = e.getBytes();
+    	byte[] data = new byte[e.length()+1];
+    	data[0] = 5; // id
+        byte[] dataHolder = e.getBytes();
+        System.arraycopy(dataHolder, 0, data, 1, data.length);
+        
         DatagramPacket p = new DatagramPacket(data, 0, data.length, ip, port);
     	try{
     		socket.send(p);
