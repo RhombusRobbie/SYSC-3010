@@ -4,17 +4,24 @@ public class ComMain {
 
 	private ComIO ioHandler;
 	private ComSendReceive udpHandler;
-	public ComMain()
+	private static byte COM_ID = 1;
+	private static byte NULL_BYTE = 0;
+	private static int PACKET_FORMATING_SIZE = 2;
+	public ComMain(ComIO cIO, ComSendReceive cSR)
 	{
-		ioHandler = null;
-		udpHandler = null;
+		ioHandler = cIO;
+		udpHandler = cSR;
 		
 	}		
-	/*create data takes a string given by the user and creates a byte array
+	
+	
+	/*This method has been deprecated due to changes in our communication protocol.
+	 * 
+	 * create data takes a string given by the user and creates a byte array
 	with only words (including apostrophes) and null characters to 
 	separate them. It will also prepend the communication controls ID
 	and append a final null character*/
-	public byte[] createData(String s)
+	/*public byte[] createData(String s)
 	{
 		//To extract all punctuation in order to help the Database on the server
 		//this will iterate through holder, placing all acceptable characters in 
@@ -43,6 +50,7 @@ public class ComMain {
 				data[dataPos] = holder[holdPos];
 				dataPos++;
 			}
+			//39 is the value of an apostrophe in ascii.
 			else if(holder[holdPos] == 39)
 			{
 				data[dataPos] = holder[holdPos];
@@ -59,7 +67,8 @@ public class ComMain {
 			}			
 		}	
 		
-		//Append either one or two null characters to signify the end of the data. 
+		//Append One null character if the current ending character is a null,
+		//Append two null characters if the current ending character is not a null.
 		if(data[dataPos-1] == 0)
 		{
 			data[dataPos] = 0;		
@@ -82,21 +91,37 @@ public class ComMain {
 			System.out.println(d);
 		
 		return finalData;
+	}*/
+	
+	
+	/*Creates a byte array with the format 	
+		1"user input string"0
+	1 is the communicators ID on the server and the terminating null character is for parsing.*/
+	public byte[] createData(String s)
+	{
+		//We want the byte array to be the exact size 
+		byte[] data = new byte[s.length() + PACKET_FORMATING_SIZE];
+		data[0] = COM_ID;		
+		//This arraycopy turns the string into bytes, reads from the 0th position
+		//and starts storing it in the first position. 
+		System.arraycopy(s.getBytes(), 0, data, 1, s.length());
+		//Terminate the byte array with a null character byte.
+		data[data.length - 1] = NULL_BYTE;
+		return data;
+		
 	}
 	
 	
-/*	Data from server is the servers ID (11) the string it is outputting
+/*	Data from server is the servers ID (5) the string it is outputting
 	and a terminating null character, the only thing this function
 	is interested in is the String, as validation happens elsewhere.  */		
-	public String extractData(byte[] data)
+	public String extractData(DatagramPacket packet)
 	{
-		//first find where data's string ends (it's terminated by a null character.)
-		for(int i = 2; i<data.length; i++)
-		{
-			
-		}
-		byte[] stringArray = new byte[data.length - 3];
-		System.arraycopy(data, 2, stringArray, 0, data.length - 3);		
+		//The data has three extra bytes, two for the servers ID and one for the terminating null character, 
+		//Those three are stripped out and then the resulting array is turned into a string. 
+		byte[] stringArray = new byte[packet.getLength() - PACKET_FORMATING_SIZE];
+		
+		System.arraycopy(packet.getData(), 1, stringArray, 0, packet.getLength() - PACKET_FORMATING_SIZE);		
 		String s = new String(stringArray);	
 		return s;
 	}
@@ -131,7 +156,7 @@ public class ComMain {
 			udpHandler.send(udpHandler.createPacket(dataToServer));			
 			packet = udpHandler.receive();		
 			udpHandler.validatePacket(packet);			
-			currentOutput = this.extractData(packet.getData());			
+			currentOutput = this.extractData(packet);			
 			ioHandler.output(currentOutput);
 			
 		}
@@ -139,11 +164,16 @@ public class ComMain {
 	
 	public static void main(String args[])
 	{
-		ComMain c = new ComMain();
 		ComSendReceive sr = new ComSendReceive();
 		ComIO io = new ComIO();
-		c.setIOHandler(io);
-		c.setUDPHandler(sr);
-		c.talk();		
+		ComMain c = new ComMain(io, sr);
+		
+		/*String s = "me.help.me.";
+		byte[] w = c.createData(s);
+		System.out.println(new String(w));
+		DatagramPacket f = new DatagramPacket(w, w.length);
+		System.out.println(c.extractData(f));*/	
+		
+		c.talk();
 	}
 }

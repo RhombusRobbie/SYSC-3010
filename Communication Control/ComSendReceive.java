@@ -8,13 +8,17 @@ public class ComSendReceive {
 	private int serverPort;
 	private DatagramSocket socket;
 	private InetAddress serverIP;
-	private static int SERVER_DEFAULT = 2002;
+	private static int SERVER_DEFAULT = 2008;
+	private static int MAX_RETRIES = 4;
+	private static int SOCKET_TIMEOUT = 1000;
+	private static String SERVER_IP = "10.0.0.1";
+	private static byte[] COM_SIGNITURE = {1};	
 	
 	//A default constructor that tests on the same system
 	public ComSendReceive()
 	{
 		
-		this(SERVER_DEFAULT, null);
+		this(SERVER_DEFAULT, SERVER_IP);
 		
 		
 	}
@@ -26,9 +30,10 @@ public class ComSendReceive {
 		serverPort = port;		
 		try{
 			socket  = new DatagramSocket();
-			socket.setSoTimeout(1000);
+			socket.setSoTimeout(SOCKET_TIMEOUT);
 		} catch(SocketException se)		{
 			se.printStackTrace();
+			System.exit(0);
 		}			
 		try{
 		if(host == null)
@@ -41,6 +46,7 @@ public class ComSendReceive {
 		}catch(UnknownHostException uhe)
 		{
 			uhe.printStackTrace();
+			System.exit(0);
 		}
 	}
 	
@@ -49,8 +55,8 @@ public class ComSendReceive {
 	public void establishConnection()
 	{
 		//this byte array functions as the greeting to the server to start establish a link.
-		byte[] signature = new byte[]{0,1,0,0};		
-		DatagramPacket contactPacket = new DatagramPacket(signature, signature.length, serverIP, serverPort);
+			
+		DatagramPacket contactPacket = new DatagramPacket(COM_SIGNITURE, COM_SIGNITURE.length, serverIP, serverPort);
 		
 		send(contactPacket);
 		
@@ -58,7 +64,7 @@ public class ComSendReceive {
 		//after three tries packet is still null
 		contactPacket = null;
 		int i = 0;
-		while(contactPacket == null && i < 3)
+		while(contactPacket == null && i < MAX_RETRIES)
 		{
 			contactPacket = receive();
 			i++;
@@ -97,11 +103,15 @@ public class ComSendReceive {
 			socket.receive(packet);
 			timedOut = false;
 			
+		}catch(SocketTimeoutException t)
+		{
+			
 		}catch(IOException ioe)
 		{
 			ioe.printStackTrace();
+			System.exit(1);
 		}
-		if(!timedOut)
+		if(timedOut)
 		{
 			packet = null;
 		}
@@ -111,7 +121,7 @@ public class ComSendReceive {
 	public boolean validatePacket(DatagramPacket packet)
 	{
 		//checks for the servers ID which is 1 1 at the start of the packet.
-		if(packet.getData()[0] != 1 || packet.getData()[1] !=1)
+		if(packet.getData()[0] != 5)
 		{
 			return false;
 		}
