@@ -83,7 +83,6 @@ public class main
             	   System.out.println("Received from: App");
             	   /** TODO:
             	    * 1) login verification.
-            	    * 2) access to DB history log.
             	    */
                default:
                 //invalid request.
@@ -125,8 +124,8 @@ public class main
     public static boolean dbSearch(DatagramPacket p){
     	byte[] data = new byte[p.getLength()-1];
     	System.arraycopy(p.getData(), 1, data, 0, p.getLength());
-    	msg = data.toString();
-    	String[] keywords = msg.split("/"); // ask alex what regex is using.
+    	msg = new String(data);
+    	String[] keywords = msg.split(" "); // ask alex what regex is using.
     	for(String s: keywords){
     		if((emotion=db.getEmotion(s)) != null){
     			return true;
@@ -134,6 +133,32 @@ public class main
     	}
     	return false;
     }
+    /**
+     * takes out punctuation from string. leaves Spaces only between keywords to be used for "searching purposes only"
+     * passing: I am very well, thank you.
+	 * returns: I am very well thank you
+     */
+	public static byte[] createData(byte[] originalData, int length){
+		int newLength = 0;
+		byte[] newData = new byte[length];
+		for(int i=0 ; i<length; i++){
+			if(originalData[i] >= 65 && originalData[i] <= 90 ){
+				newData[newLength++] = originalData[i];
+			}else if(originalData[i] >= 97 && originalData[i] <= 122){
+				newData[newLength++] = originalData[i];
+			}else if(originalData[i] == 32){
+				newData[newLength++] = originalData[i];
+			}else{
+				// do nothing. [ its punctuation ] 
+			}	
+		}
+		byte[] finalData = new byte[newLength];
+		for(int j = 0; j<newLength; j++){
+			finalData[j] = newData[j];
+		}
+		return finalData;
+		
+	}
     
     public static void sendPacket(String e, InetAddress ip, int port){
         byte[] data = e.getBytes();
