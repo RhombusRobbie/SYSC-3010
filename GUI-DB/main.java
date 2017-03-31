@@ -90,9 +90,11 @@ public class main
             	   if(message.contains("game") && message.contains("play")){
             		   // play game.
             		   // send activation packet.
+            		   sendPacket(serverID+"start", gameAddress, gamePort);
             	   }else if(message.contains("game") && (message.contains("stop") || message.contains("quit"))){
             		   // stop game.
             		   // send termination packet.
+            		   sendPacket(serverID+"stop", gameAddress, gamePort);
             	   }else{
                 	   // normal communication sending back random sentence.            		   
             		   sendPacket(serverID + botSession.think(message), commAddress, commPort);
