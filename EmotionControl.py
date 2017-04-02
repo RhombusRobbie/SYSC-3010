@@ -58,14 +58,14 @@ pfd = pifacedigitalio.PiFaceDigital()
 	stepper motor must be connected to pins 4-8.
 """
 def moveEyebrows(degrees):
-	# Double the amount of steps required. Double because two steps are
+	# Half the amount of steps required. Half because two steps are
 	# performed in each loop.
-	dSteps = int(float(degrees) / 360 * 512)
+	halfSteps = int(float(degrees) / 360 * 512)
 	
 	# Counter-clockwise
-	if dSteps >= 0:
+	if halfSteps >= 0:
 		pfd.output_pins[4].value = 1
-		for i in range(steps):
+		for i in range(halfSteps):
 			pfd.output_pins[(i - 1) % 4 + 4].value = 0
 			pfd.output_pins[(i + 1) % 4 + 4].value = 1
 			sleep(PPS_DELAY)
@@ -73,7 +73,7 @@ def moveEyebrows(degrees):
 	# Clockwise
 	else:
 		pfd.output_pins[6].value = 1
-		for i in range(-dSteps, 0, -1):
+		for i in range(-halfSteps, 0, -1):
 			pfd.output_pins[(i - 1) % 4 + 4].value = 1
 			pfd.output_pins[(i + 1) % 4 + 4].value = 0
 			sleep(PPS_DELAY)
@@ -91,12 +91,12 @@ def moveEyebrows(degrees):
 def moveMouth(degrees):
 	# Double the amount of steps required. Double because two steps are
 	# performed in each loop.
-	dSteps = int(float(degrees) / 360 * 512)
+	halfSteps = int(float(degrees) / 360 * 512)
 
 	# Counter-clockwise
-	if dSteps >= 0:
+	if halfSteps >= 0:
 		pfd.output_pins[0].value = 1
-		for i in range(dSteps):
+		for i in range(halfSteps):
 			pfd.output_pins[(i - 1) % 4].value = 0
 			pfd.output_pins[(i + 1) % 4].value = 1
 			sleep(PPS_DELAY)
@@ -104,7 +104,7 @@ def moveMouth(degrees):
 	# Clockwise
 	else:
 		pfd.output_pins[6].value = 1
-		for i in range(-steps, 0, -1):
+		for i in range(-halfSteps, 0, -1):
 			pfd.output_pins[(i - 1) % 4].value = 1
 			pfd.output_pins[(i + 1) % 4].value = 0
 			sleep(PPS_DELAY)
