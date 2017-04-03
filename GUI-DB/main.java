@@ -48,7 +48,6 @@ public class main
            //-----------------------------------//
            
            
-           
            // wait to receive something
         try{   
            
@@ -70,6 +69,7 @@ public class main
            switch((packet.getData()[0] & 0xff)){// convert byte id to int id.
                case 1:
             	   // from communicator
+            	   String triggeredKeyword;
             	   System.out.println("Received from: Communicator");
             	   if(initialCommunicationFlags[0] != 1){
             		   // means first time.
@@ -78,14 +78,12 @@ public class main
             		   // flag to 1
             		   initialCommunicationFlags[0] = 1;
             	   }
-            	   if(dbSearch(packet)){
+            	   if((triggeredKeyword=dbSearch(packet)) != null){
             		   // keyword found
             		   // 1) add event to history Database, 2) notify App.
-            		   Update("Keyword matched with one in list, he/she feels "+ emotion);
+            		   Update(triggeredKeyword + " has been said, and he/she feels "+ emotion +"."+ "\nKeyword found in: "+ message); // suicide has been said, and he/she feels sad.
             	   }
-            	   /**
-            	    *  PROBLEM: we need to know what emotion should be given based on bot answer.
-            	    */
+
             	   
             	   if(message.contains("game") && message.contains("play")){
             		   // play game.
@@ -98,6 +96,8 @@ public class main
             	   }else{
                 	   // normal communication sending back random sentence.            		   
             		   sendPacket(serverID + botSession.think(message), commAddress, commPort);
+            		   // now send Packet to emotion control to act according to the bot response.
+            		   sendPacket(serverID + emotion, emotionAddress, emotionPort);
             	   }
             	   
                case 2:
@@ -183,7 +183,7 @@ public class main
      * @return true, if keyword in packet matched with keyword in Database.
      * @return false, otherwise.
      */
-    public static boolean dbSearch(DatagramPacket p){
+    public static String dbSearch(DatagramPacket p){
     	int length = p.getLength()-1;
     	byte[] data = new byte[p.getLength()-1];
     	System.arraycopy(p.getData(), 1, data, 0, p.getLength());
@@ -192,10 +192,10 @@ public class main
     	String[] keywords = msg.split(" ");
     	for(String s: keywords){
     		if((emotion=db.getEmotion(s)) != null){
-    			return true;
+    			return s;
     		}
     	}
-    	return false;
+    	return null;
     }
     
     /**
