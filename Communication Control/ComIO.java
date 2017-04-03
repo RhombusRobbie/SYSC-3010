@@ -12,9 +12,10 @@ public class ComIO {
 	
 	public String getInput()
 	{
+		System.out.println("test");
 		Scanner newInput = new Scanner(System.in);
 		String s = newInput.nextLine();
-		newInput.close();
+		//newInput.close();
 		return s;
 	}
 	

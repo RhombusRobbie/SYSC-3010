@@ -140,8 +140,11 @@ public class ComMain {
 	//this method handles the general function of the communicator sub-system 
 	public void talk()
 	{
-		//this will test whether or not the server is currently online, the program will shut down if not. 
-		udpHandler.establishConnection();
+		//this will test whether or not the server is currently online, the program will shut down if false is returned. 
+		if(!udpHandler.establishConnection())
+		{
+			System.exit(0);
+		}
 		String currentInput, currentOutput;
 		DatagramPacket packet;
 		
@@ -154,10 +157,13 @@ public class ComMain {
 			
 			//creates the packet and sends the packet to the server.
 			udpHandler.send(udpHandler.createPacket(dataToServer));			
-			packet = udpHandler.receive();		
-			udpHandler.validatePacket(packet);			
-			currentOutput = this.extractData(packet);			
-			ioHandler.output(currentOutput);
+			packet = udpHandler.receive();
+			if(packet!=null)
+			{	
+				udpHandler.validatePacket(packet);			
+				currentOutput = this.extractData(packet);			
+				ioHandler.output(currentOutput);
+			}
 			
 		}
 	}
@@ -172,7 +178,7 @@ public class ComMain {
 		byte[] w = c.createData(s);
 		System.out.println(new String(w));
 		DatagramPacket f = new DatagramPacket(w, w.length);
-		System.out.println(c.extractData(f));*/	
+		System.out.println(c.extractData(f));*/
 		
 		c.talk();
 	}
