@@ -9,31 +9,33 @@ public class ComSendReceive {
 	private DatagramSocket socket;
 	private InetAddress serverIP;
 	private DatagramPacket lastSentPacket;
+	private ComMain Handler;
 	private static int SERVER_DEFAULT = 2008;
 	private static int MAX_RETRIES = 4;
-	private static int SOCKET_TIMEOUT = 1000;
-	private static String SERVER_IP = "10.0.0.1";
-	private static byte[] COM_SIGNITURE = {1};	
-	private static boolean debug = true;
+	private static int SOCKET_TIMEOUT = 2000;
+	private static int MAX_BUFFER_SIZE = 600;
+	private static String SERVER_IP = "172.17.152.193";
+	private static byte[] COM_SIGNITURE = {1,0};	
+	private boolean debug;
 	
 	
 	//A default constructor that tests on the same system
-	public ComSendReceive()
+	public ComSendReceive(boolean debugSetting)
 	{
-		
-		this(SERVER_DEFAULT, SERVER_IP);	
+		this(SERVER_DEFAULT, SERVER_IP, debugSetting);	
 	}
 	
 	//Takes the servers port and IP  to instantiate itself.
-	public ComSendReceive(int port, String host)
+	public ComSendReceive(int port, String host, boolean debugSetting)
 	{
-		
+		debug = debugSetting;
 		serverPort = port;
 		try{
 			socket  = new DatagramSocket();
 			socket.setSoTimeout(SOCKET_TIMEOUT);
 		} catch(SocketException se)		{
 			se.printStackTrace();
+			this.quit();
 			System.exit(0);
 		}			
 		try{
@@ -50,6 +52,7 @@ public class ComSendReceive {
 			{
 				uhe.printStackTrace();
 			}
+			this.quit();
 			System.exit(0);
 		}
 	}
@@ -74,7 +77,7 @@ public class ComSendReceive {
 		{
 			contactPacket = receive();
 			i++;
-			this.send(lastSentPacket);
+			//this.send(lastSentPacket);
 		}
 		if(contactPacket == null)
 		{
@@ -82,6 +85,7 @@ public class ComSendReceive {
 			{
 				System.out.println("There was no response, shutting down.");
 			}
+			this.quit();
 			System.exit(0);
 		}
 		if(debug)
@@ -103,6 +107,7 @@ public class ComSendReceive {
 			{
 				ioe.printStackTrace();
 			}
+			this.quit();
 			System.exit(0);
 		}	
 		lastSentPacket = packet;
@@ -119,7 +124,7 @@ public class ComSendReceive {
 	//simple receive function that tries to receive for one second before giving up and returning null.
 	public DatagramPacket receive()
 	{
-		byte data[] = new byte[500];
+		byte data[] = new byte[MAX_BUFFER_SIZE];
 		boolean timedOut = true;
 		DatagramPacket packet = new DatagramPacket(data, data.length);
 		try{
@@ -135,7 +140,8 @@ public class ComSendReceive {
 			{
 				ioe.printStackTrace();
 			}
-			System.exit(1);
+			this.quit();
+			System.exit(0);
 		}
 		if(timedOut)
 		{
@@ -155,6 +161,7 @@ public class ComSendReceive {
 			}
 			return false;
 		}
+				
 		//checks if the packet is terminated properly with a null character.
 		if(packet.getData()[packet.getLength()-1] != 0)
 		{
@@ -162,6 +169,7 @@ public class ComSendReceive {
 			{
 				System.out.println("the packet was not terminated with a null character");
 			}
+			
 			return false;
 		}
 		if(debug)
@@ -171,9 +179,19 @@ public class ComSendReceive {
 		return true;
 	}
 	
+	public void setComHandler(ComMain main)
+	{
+		Handler = main;
+	}
 	
 	public DatagramPacket getLastSentPacket()
 	{
 		return lastSentPacket;
+	}
+	
+	//A simple method to make sure the sockets are closed appropriately. 
+	public void quit()
+	{
+		socket.close();
 	}
 }

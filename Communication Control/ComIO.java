@@ -7,13 +7,16 @@ public class ComIO {
 	for testing purposes, the other is for the ability to go to Voice input or to a chatterbot 
 	implementation if time permits.*/
 	
+	Scanner newInput;
+	
 	public ComIO()
-	{}
+	{
+		newInput  = new Scanner(System.in);
+	}
 	
 	public String getInput()
 	{
-		System.out.println("test");
-		Scanner newInput = new Scanner(System.in);
+		//System.out.println("test");
 		String s = newInput.nextLine();
 		//newInput.close();
 		return s;
@@ -22,5 +25,10 @@ public class ComIO {
 	public void output(String s)
 	{
 		System.out.println(s);
+	}
+	
+	public void quit()
+	{
+		newInput.close();
 	}
 }
