@@ -15,7 +15,7 @@ public class main
     // instance variables - replace the example below with your own
     static mainFrame mf;
     static DatagramSocket socket;
-    private final static int PACKETSIZE = 100 , serverID = 5, serverPort = 2008;
+    private final static int PACKETSIZE = 100 , serverPort = 2008;
 	static String[] str;
 	static String emotion = "";
 	static DB db;
@@ -30,7 +30,6 @@ public class main
 	 * For example, Communicator sends a packet contains only its ID, say 1, so at index 0 is the flag for Communicator.
 	 * we get InetAddress, Port of the packet and store it for later, then we set the flag at index 0 to 1 to avoid repeating. 
 	 */
-	static int[] initialCommunicationFlags = {0, 0, 0, 0}; 
 	
     /**
      * Constructor for objects of class main
@@ -40,6 +39,12 @@ public class main
            db = new DB();
            mf = new mainFrame();
            Login lgn = new Login(mf,db);
+           shutdownHandler sdh = new shutdownHandler(db);
+   		   Runtime.getRuntime().addShutdownHook(sdh);
+           
+           
+           
+           
            
            //------------ Bot Initialize --------//
            ChatterBotFactory factory = new ChatterBotFactory();
@@ -47,6 +52,7 @@ public class main
            botSession = bot.createSession();
            //-----------------------------------//
            
+           int[] initialCommunicationFlags = {0, 0, 0, 0}; 
            
            // wait to receive something
         try{   
@@ -69,83 +75,86 @@ public class main
            switch((packet.getData()[0] & 0xff)){// convert byte id to int id.
                case 1:
             	   // from communicator
-            	   String triggeredKeyword;
-            	   System.out.println("Received from: Communicator");
+				   String triggeredKeyword = "";
+            	   System.out.println("Received from: Communicator: "+ packet.getData());
             	   if(initialCommunicationFlags[0] != 1){
             		   // means first time.
             		   commPort = packet.getPort();
             		   commAddress = packet.getAddress();
             		   // flag to 1
             		   initialCommunicationFlags[0] = 1;
-            	   }
-            	   if((triggeredKeyword=dbSearch(packet)) != null){
+					   // sends acknowledge.
+					   sendPacket("", commAddress, commPort);
+					   break;  
+            	   }else if((triggeredKeyword=dbSearch(packet))!=null){
             		   // keyword found
             		   // 1) add event to history Database, 2) notify App.
-            		   Update(triggeredKeyword + " has been said, and he/she feels "+ emotion +"."+ "\nKeyword found in: "+ message); // suicide has been said, and he/she feels sad.
-            	   }
-
-            	   
-            	   if(message.contains("game") && message.contains("play")){
+            		   if(!emotion.contains("happy")){
+            			   Update(triggeredKeyword+ " has been said, the child feels "+ emotion + "The original sentence is: " + (new String(packet.getData())));
+            		   }
+            	   }else if(message.contains("game") && message.contains("play")){
             		   // play game.
             		   // send activation packet.
-            		   sendPacket(serverID+"start", gameAddress, gamePort);
+            		   sendPacket("start", gameAddress, gamePort);
             	   }else if(message.contains("game") && (message.contains("stop") || message.contains("quit"))){
             		   // stop game.
             		   // send termination packet.
-            		   sendPacket(serverID+"stop", gameAddress, gamePort);
-            	   }else{
-                	   // normal communication sending back random sentence.            		   
-            		   sendPacket(serverID + botSession.think(message), commAddress, commPort);
-            		   // now send Packet to emotion control to act according to the bot response.
-            		   sendPacket(serverID + emotion, emotionAddress, emotionPort);
+            		   sendPacket("stop", gameAddress, gamePort);
             	   }
-            	   
-               case 2:
+                   // normal communication sending back random sentence.            		   
+					sendPacket(botSession.think(message), commAddress, commPort);
+					//sendEmotionPacket(emotionIdentifier(), emotionAddress, emotionPort);
+            	   break;
+               case 3:
                 // from game
             	   System.out.println("Received from: Game");
-            	   if(initialCommunicationFlags[1] != 1){
+            	   if(initialCommunicationFlags[2] != 1){
             		   // means first time.
             		   gamePort = packet.getPort();
             		   gameAddress = packet.getAddress();
             		   // flag to 1
-            		   initialCommunicationFlags[1] = 1;
+            		   initialCommunicationFlags[2] = 1;
+					   //sending ack
+					   sendPacket("", gameAddress, gamePort);
             	   }
             	   // pass it to Communicator.
             	   sendPacket(new String(packet.getData()), commAddress, commPort);
-
-               case 3:
+            	   break;
+               case 4:
                 // from mobile app
             	   System.out.println("Received from: App");
-            	   if(initialCommunicationFlags[2] != 1){
-            		   // means first time.
-            		   appPort = packet.getPort();
-            		   appAddress = packet.getAddress();
-            		   // flag to 1
-            		   initialCommunicationFlags[2] = 1;
-            	   }
+
             	   // extracting packet's data.//
-            	    byte[] data = new byte[packet.getLength()-1];
-               		System.arraycopy(packet.getData(), 1, data, 0, packet.getLength());
+            	    byte[] data = new byte[packet.getLength()-2];
+               		System.arraycopy(packet.getData(), 1, data, 0, packet.getLength()-2);
                		String[] login = (new String(data)).trim().split(" "); // username at [0], password at [1]
+               		System.out.println(login[0]);
+               		System.out.println(login[1]);
                		//-------------------------//
+               		appAddress = packet.getAddress();
+               		appPort = packet.getPort();
             	   // login verification.
             	   if(db.contains(login[0], login[1])){
             		   // send back YES message.
-            		   sendPacket(serverID+"YES", appAddress, appPort);
+            		   sendEmotionPacket((byte) 1, appAddress, appPort);
             	   }else{
             		   // send back NO message.
-            		   sendPacket(serverID+"NO", appAddress, appPort);
+            		   sendEmotionPacket((byte) 0 , appAddress, appPort);
             	   }
-               case 4:
+            	   break;
+               case 2:
             	   // from emotionController
             	   System.out.println("Received from: EmotionControl");
-            	   if(initialCommunicationFlags[3] != 1){
+            	   if(initialCommunicationFlags[1] != 1){
             		   // means first time.
             		   emotionPort = packet.getPort();
             		   emotionAddress = packet.getAddress();
             		   // flag to 1
-            		   initialCommunicationFlags[3] = 1;
+            		   initialCommunicationFlags[1] = 1;
+					   //sending ack
+					   sendEmotionPacket((byte)5, emotionAddress, emotionPort);
             	   }
+            	   break;
                default:
                 //invalid request.
             	   System.out.println("Received from: ERROR.");
@@ -170,23 +179,45 @@ public class main
     	db.setEvent(event);
     	
     	// sending notification to App after here.//
-    	sendPacket(serverID+ event, appAddress, appPort);
+    	sendPacket(event, appAddress, appPort);
     	//----------------------------------------//
     }
-    
-    
+    		/**
+		 * Neutral - byte 0
+		 * Happy - byte 1
+		 * Sad - byte 2
+		 * Angry - byte 3
+		 * ShutdownCode 0xFF
+		 * */
+    public static byte emotionIdentifier(){
+		switch(emotion){
+			case "happy":
+				return 1;
+			case "sad":
+				return 2;
+			case "neutral":
+				return 0;
+			case "angry":
+				return 3;
+			case "shut":
+				return (byte) 0xFF;
+			default:
+				return 0;// neutral
+		}
+		
+	}
     
     
     /**
      * Packet passed contains keyword per index, this method is to search each keyword with the program's local database.
      * @param p DatagramPacket
-     * @return true, if keyword in packet matched with keyword in Database.
-     * @return false, otherwise.
+     * @return triggeredKeyword, if keyword in packet matched with keyword in Database.
+     * @return null, otherwise.
      */
     public static String dbSearch(DatagramPacket p){
-    	int length = p.getLength()-1;
-    	byte[] data = new byte[p.getLength()-1];
-    	System.arraycopy(p.getData(), 1, data, 0, p.getLength());
+    	int length = p.getLength()-2;
+    	byte[] data = new byte[p.getLength()-2];
+    	System.arraycopy(p.getData(), 1, data, 0, p.getLength()-2);
     	message = new String(data); // whole sentence with punctuation, to be sent to Bot.
     	String msg = new String(createData(data, length)); // sentence without punctuation, to be converted to list of words for DB search.
     	String[] keywords = msg.split(" ");
@@ -225,12 +256,33 @@ public class main
 		return finalData;
 		
 	}
-    
+    // for both the App and Emotion Controller.
+	// sendBytePacket
+    public static void sendEmotionPacket(byte byteValue, InetAddress ip, int port){
+		/**
+		 * Neutral - byte 0
+		 * Happy - byte 1
+		 * Sad - byte 2
+		 * Angry - byte 3
+		 * ShutdownCode 0xFF
+		 * */
+		 byte[] dataholder = new byte[2];
+		 dataholder[0] = 5;
+		 dataholder[1] = byteValue;
+		 DatagramPacket p = new DatagramPacket(dataholder, 0, dataholder.length, ip, port);
+		 try{
+			 socket.send(p);
+		 }catch(Exception j){
+			 j.printStackTrace();
+		 }
+		 
+	}
     public static void sendPacket(String e, InetAddress ip, int port){
-    	byte[] data = new byte[e.length()+1];
-        data = e.getBytes();
-        
-        DatagramPacket p = new DatagramPacket(data, 0, data.length, ip, port);
+    	byte[] dataholder = new byte[2+e.length()];
+    	dataholder[0] = 5;
+        System.arraycopy(e.getBytes(), 0, dataholder, 1, e.length());
+        dataholder[dataholder.length - 1] = 0;
+        DatagramPacket p = new DatagramPacket(dataholder, 0, dataholder.length, ip, port);
     	try{
     		socket.send(p);
     		
@@ -239,6 +291,7 @@ public class main
     	}
     	
     }
+    
     
 
 }
