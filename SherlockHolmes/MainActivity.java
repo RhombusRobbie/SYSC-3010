@@ -3,6 +3,7 @@ package com.example.adebola.sherlockholmes;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,25 +19,19 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.lang.String;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 
-public class MainActivity extends AppCompatActivity{
 
+public class MainActivity extends AppCompatActivity {
 
     EditText Username, Password;
     TextView WrongPassword;
-
+    DatagramSocket s;
     //Tag name for checking the Log
     private static final String TAG = "MainActivity";
+    private static final int server_Port = 2008;
 
-    //Variable to check for validity of the username and password from server
-    public String Login_valid;
 
     public Button Login_button;
-
-    // Port the Server is sitting on
-    public int server_Port = 5002;
 
 
     @Override
@@ -44,10 +39,13 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Username = (EditText) findViewById(R.id.editText);
+        Password = (EditText) findViewById(R.id.editText2);
         //Printout Logs of the activity on MainPage
         Log.i(TAG, "OnCreate");
-
-        run();
+        try {
+            s = new DatagramSocket();
+        }catch(Exception e ){System.out.println(e);}
 
         // This is just to display wrong password Text for invalid password
         WrongPassword = (TextView)findViewById(R.id.textView3);
@@ -55,157 +53,104 @@ public class MainActivity extends AppCompatActivity{
 
         Login_button = (Button) findViewById(R.id.button);
 
-        //Check if the Login button is clicked
-        Login_button.setOnClickListener(new View.OnClickListener() {
-
-            //When the Login button is clicked, it sends the username and password to the server
-            //to check if its is valid or not and server sends back a boolean
-            @Override
-            public void onClick(View v) {
-
-                //Printout Logs of the activity on MainPage
-                Log.i(TAG, "OnClick: udpSend");
-
-                try {
-
-                    //Printout Logs of the activity on MainPage
-                    Log.i(TAG, "OnClick: udpSend: Sent");
-
-                    DatagramSocket s = new DatagramSocket(server_Port);
-                    InetAddress local = InetAddress.getByName("127.0.0.1");
-                    int Username_length = Username.getText().toString().length();
-                    int Password_length = Password.getText().toString().length();
-
-                    //getting the actual message to be sent
-                    byte[] message1 = Username.getText().toString().getBytes();
-
-                    byte[] message2 = Password.getText().toString().getBytes();
-
-                    byte[] actual_message = new byte[100];
-                    actual_message[0] = 3;
-
-                    System.arraycopy(message1, 0, actual_message, 1, Username_length);
-                    actual_message[Username_length+1] = 0;
-
-                    System.arraycopy(message2,0, actual_message, Username_length+2, Password_length);
-                    actual_message[Username_length+Password_length+2] = 0;
-
-
-
-                    //Used to implement the packet the delivery service. Information for the delivery is
-                    //contained within the datagramPacket
-                    DatagramPacket p = new DatagramPacket(actual_message, Username_length+Password_length+3, local, server_Port);
-                    s.send(p);
-
-
-                    //Printout Logs of the activity on MainPage
-                    Log.i(TAG, "OnClick: udpSend: Sent");
-
-                } catch (SocketException e) {
-                    e.printStackTrace();
-                } catch (UnknownHostException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        });
     }
 
-
-    /*Called when the User Clicks the Login Button*/
+    // Called when the User Clicks the Login Button
     public void Login(View view){
 
+
         //Printout Logs of the activity on MainPage
-        Log.i(TAG, "Login");
+        Log.i(TAG, "OnClick: udpSend");
+        DatagramPacket p = null;
 
-        Username = (EditText) findViewById(R.id.editText);
-        Password = (EditText) findViewById(R.id.editText2);
+        //All us to be able to use the IP address
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        try {
 
-        //Get Username from the User and Send to the server
-        String Username1 = Username.getText().toString();
-        String Password1 = Password.getText().toString();
+            //Printout Logs of the activity on MainPage
+            Log.i(TAG, "OnClick: udpSend: In the Try for Sending");
+
+            int Username_length = Username.getText().length();
+            int Password_length = Password.getText().length();
+
+            //getting the actual message to be sent
+            byte[] message1 = Username.getText().toString().getBytes();
+
+            byte[] message2 = Password.getText().toString().getBytes();
+
+            byte[] actual_message = new byte[100];
+            actual_message[0] = 4;
+
+            System.arraycopy(message1, 0, actual_message, 1, Username_length);
+            actual_message[Username_length+1] = ' ';
+
+            System.arraycopy(message2,0, actual_message, Username_length+2, Password_length);
+            actual_message[Username_length+Password_length+2] = 0;
+
+            Log.i(TAG, new String(actual_message));
+
+            //Printout Logs of the activity on MainPage
+            Log.i(TAG, "OnClick: about to Try the ip ");
+            InetAddress local = InetAddress.getByName("172.17.152.193");
+            //Used to implement the packet the delivery service. Information for the delivery is
+            //contained within the datagramPacket
+            Log.i(TAG, "OnClick: after ip ");
 
 
-        //allow Login when the Correct Password is Pressed
-        if(Username.getText().toString().equals("sherlock") &&
-                Password.getText().toString().equals("holmes")){
-            //Correct Password
+            p = new DatagramPacket(actual_message, Username_length+Password_length+3, local, server_Port);
+            s.send(p);
+
+            //DELETE THIS COMMENT when you ready to run the code
+            /*
+            //The program waits for a response from the server before proceeding
+            //Receiving back the acknowledge that the username and password is correct
+            byte[] data = new byte[2];
+            p = new DatagramPacket(data, 2);
+            s.receive(p);
+             */
+            //Printout Logs of the activity on MainPage
+            Log.i(TAG, "OnClick: udpSend: Sent");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        //Response back from the server. That is, if the server send back 51 then the username
+        //and password is correct else it displays an Error message
+        if(p.getData()[1] == 1 && p.getData()[0] == 5){ // 51
+
+            //Allow access when the right password has be received
             Intent intent = new Intent(this, Mainpage.class);
             startActivity(intent);
-        }else {
+        }else { // 50
             //Wrong Password
             WrongPassword.setVisibility(View.VISIBLE);
             WrongPassword.setBackgroundColor(Color.MAGENTA);
 
+            //Toast to display wrong Password
+            Context context = getApplicationContext();
+            CharSequence text = "Wrong Username and Password ";
+            int duration = Toast.LENGTH_SHORT;
+
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+
+            Log.i(TAG, "Prompt for The right UserName and Password");
+            //Call the intent again if the wrong password and username is entered
+            Intent intent1 = new Intent(this, Mainpage.class);
+            startActivity(intent1);
+
         }
     }
 
+    /*
 
-    //Receive Data  from server.
-
-    // Trying to get it to Receive a string then check this string if its true or false
-    public void run(){
-
-        //Printout Logs to let us know that it is receiving from the Server
-        Log.i(TAG, "run: ReceivingFromServer");
-
-        boolean run = true;
-            while (run){
-                try {
-                    DatagramSocket udpSocket = new DatagramSocket(server_Port);
-                    byte[] message = new byte[8000];
-
-                    DatagramPacket packet = new DatagramPacket(message, message.length);
-                    Log.i("UDP client: ", "Waiting to receive from Server");
-                    udpSocket.receive(packet);
-
-                    // Getting string from the byte Array. i.e Turning byte Array to String
-                    Login_valid = new String(packet.getData());
-
-                    //Check if the String contains YES or NO. If YES then it let us Login and
-                    //If No then it doesn't allow Login and if anything else then it makes a toast to
-                    //Tell us that
-                    if(Login_valid.contains("YES")) {
-                        Intent intent = new Intent(this, Mainpage.class);
-                        startActivity(intent);
-
-                    } else if(Login_valid.contains("NO")){
-
-                        //Wrong Password
-                        WrongPassword.setVisibility(View.VISIBLE);
-                        WrongPassword.setBackgroundColor(Color.MAGENTA);
-
-                        //Calls the run method again until right password is pressed
-                        run();
-
-                        run = true;
-                    }else{
                         Context context = getApplicationContext();
                         CharSequence text = "Wrong Message From Server";
                         int duration = Toast.LENGTH_SHORT;
 
                         Toast toast = Toast.makeText(context, text, duration);
                         toast.show();
-
-                        //Calls the run method again until right password is pressed
-                        run();
-                    }
-
-                    String text = new String(message, 0, packet.getLength());
-
-                    Log.d("Received data", text);
-                } catch (SocketException e) {
-                    e.printStackTrace();
-                    run = false;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    run = false;
-                }
-
-                //Printout Logs to let us know that it is receiving from the Server
-                Log.i(TAG, "run: ReceivingFromServer");
-            }
-    }
+    }*/
 }
