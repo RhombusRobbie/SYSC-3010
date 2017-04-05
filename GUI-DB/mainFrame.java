@@ -55,6 +55,8 @@ public class mainFrame extends JFrame {
     }
 
 public void update(String str){
+	// we need to take out first char.
+	String temp = str.substring(1);
     if(textArea.getText() == ""){
         textArea.setText(str);
     }else{
