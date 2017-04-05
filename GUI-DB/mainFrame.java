@@ -3,7 +3,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.io.*;
-import javax.swing.BorderFactory;
 
 public class mainFrame extends JFrame {
    JTextArea textArea;   
@@ -34,12 +33,17 @@ public class mainFrame extends JFrame {
         scrollPane.setPreferredSize(new Dimension(700,400));
         //panel2.setPreferredSize(new Dimension(100,100));
         panel1.add(scrollPane);
-        
-        panel2.add(new Button("     Clear History    "));
+        Button clear = new Button("Clear History");
+        panel2.add(clear);
         panel2.add(new Button("     Export History    "));
         //scrollPane.setSize(1000,3000);
-        //setSize(1000,1000);
-        
+        //setSize(1000,1000);     
+        clear.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent ae){
+            	textArea.setText(null);
+              }
+          }
+          );
         //panel1.setBounds(0,0,250, 500);
         //panel2.setBounds(252, 0, 248, 500);
         getContentPane().add(panel1, BorderLayout.CENTER);
