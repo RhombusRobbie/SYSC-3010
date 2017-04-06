@@ -1,0 +1,105 @@
+package com.example.adebola.sherlockholmes;
+
+/**
+ * Created by Adebola on 2017-03-25.
+ */
+import android.app.IntentService;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+
+import static android.R.attr.port;
+import static android.provider.AlarmClock.EXTRA_MESSAGE;
+
+/// App is waiting on the server. A key word was detected. the whole String from server
+//  hey/how
+
+//Service Intent to check the Server for command. Do this in the background while
+// the program is running
+public class ServerService extends IntentService {
+
+
+    private static final String  TAG = "ServerService";
+
+    private static final int udp_server_port = 2008;
+    private static final int Max_udpMessage_len = 1000;
+
+    String eventText;
+
+    //Constructor for the Service intent
+    public ServerService() {
+        super("ServerService");
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
+
+        // Run Service to check the server for input while program runs
+        Log.i(TAG, "Service Started");
+        DatagramSocket dsocket = null;
+
+        try {
+            dsocket = new DatagramSocket(udp_server_port);
+            byte[] event = new byte[Max_udpMessage_len];
+            DatagramPacket packet = new DatagramPacket(event, event.toString().length());
+
+            //To continuously listen and receive for data
+            while (true) {
+
+                dsocket.receive(packet);
+
+                eventText = new String(packet.getData());
+                Log.i("UDP packet is received", eventText);
+
+                packet.setLength(eventText.length());
+
+                //Trying to get the Packet from the previous activity to here
+                //Sending eventTExt to History class
+                Log.i(TAG, "Trying to send eventText now");
+                Intent intent2 = new Intent(ServerService.this, History.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("eventText", eventText);
+
+                intent.putExtras(bundle);
+                startActivity(intent2);
+
+
+                //IF an event is received then start the History Activity
+                Log.i(TAG, "IF statement for the start History Activity");
+                if (eventText.length() > 1) {
+
+                    Log.i(TAG, "Trying to start the History activity to display events");
+                    //Call the History Activity whenever an event is received
+                    Intent HistoryIntent = new Intent(this, History.class);
+                    HistoryIntent.putExtra(EXTRA_MESSAGE, eventText);
+                    startActivity(HistoryIntent);
+                }
+
+            }
+
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (dsocket != null){
+                dsocket.close();
+            }
+        }
+    }
+
+    public String getEvent(){
+
+        //Print out the event on Terminal and then return it
+        Log.i(TAG, new String(eventText));
+        return eventText;
+    }
+}
+
+
