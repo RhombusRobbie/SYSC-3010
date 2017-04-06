@@ -1,66 +1,95 @@
-import socket
+import socket, binascii
 from random import randint
 from time import sleep
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
+LOCAL_IP = "127.0.0.1"
+LOCAL_PORT = 2008
+BUFFERSIZE = 1024
 
-NEUTRAL = bytearray([0, 1, 0, 1])
-HAPPY = bytearray([0, 1, 0, 2])
-SAD = bytearray([0, 1, 0, 3])
-ANGRY = bytearray([0, 1, 0, 4])
-SHUTDOWN = bytearray([0, 1, 0, 9])
+# IDs of sysetem machines
+EMOTION_CONTROL_ID = b'\x02'
+SERVER_ID = b'\x05'
 
-randomTest = False
+# TO-DO Change to tuple of byte arrays
+NEUTRAL = bytearray([5, 0])
+HAPPY = bytearray([5, 1])
+SAD = bytearray([5, 2])
+ANGRY = bytearray([5, 3])
+SHUTDOWN = bytearray([5, 255])
 
-print ("UDP target IP:", UDP_IP)
-print ("UDP target port:", UDP_PORT)
+CODES = (b'\x05\x00', b'\x05\x01', b'\x05\x02', b'\x05\x03', b'\x05\xFF')
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+RANDOM_TEST = 	True
+NUMBER_OF_TESTS = 5
+NEW_EMOTION_DELAY = 4
 
-if randomTest:
-	for i in range(10):
-		rand = randint(1, 4)
-		if rand == 1:
-			sock.sendto(NEUTRAL, (UDP_IP, UDP_PORT))
-			print("Neutral")
-		elif rand == 2:
-			sock.sendto(HAPPY, (UDP_IP, UDP_PORT))
-			print("Happy")
-		elif rand == 3:
-			sock.sendto(SAD, (UDP_IP, UDP_PORT))
+def main():
+	print "Emotion Controller Mock Server"
+	print "Author:	Robert Graham 100981086"
+	print "Date:	4 March 2017\n"
+	
+	print "Local IP:\t" + LOCAL_IP
+	print "Local port:\t%d" % LOCAL_PORT
+
+	while True:
+		# Wait for connection request from emotion control
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		sock.bind((LOCAL_IP, LOCAL_PORT))
+		print "\nWaiting for request..."
+		data, (emotionControlIP, emotionControlPort) = sock.recvfrom(BUFFERSIZE)
+		print "Request received"
+		print "Data:\t" + binascii.hexlify(data)
+		print "IP:\t" + emotionControlIP
+		print "Port:\t%d" % emotionControlPort
+
+		# Handshake
+		print "\nSending handshake..."
+		print "Data:\t" + binascii.hexlify(SERVER_ID)
+		print "IP:\t" + emotionControlIP
+		print "Port:\t%d" % emotionControlPort
+		sock.sendto(SERVER_ID, (emotionControlIP, emotionControlPort))
+
+		sleep(2)
+
+		if RANDOM_TEST:
+			for i in range(NUMBER_OF_TESTS):
+				rand = randint(0, 3)
+				sock.sendto(CODES[rand], (emotionControlIP, emotionControlPort))
+				print rand
+				sleep(NEW_EMOTION_DELAY)
+
+		else:
+			sock.sendto(SAD, (emotionControlIP, emotionControlPort))
 			print("Sad")
-		elif rand == 4:
-			sock.sendto(ANGRY, (UDP_IP, UDP_PORT))
+			sleep(NEW_EMOTION_DELAY)
+			sock.sendto(HAPPY, (emotionControlIP, emotionControlPort))
+			print("Happy")
+			sleep(NEW_EMOTION_DELAY)
+			sock.sendto(NEUTRAL, (emotionControlIP, emotionControlPort))
+			print("Neutral")
+			sleep(NEW_EMOTION_DELAY)
+			sock.sendto(ANGRY, (emotionControlIP, emotionControlPort))
 			print("Angry")
-			
-		sleep(3)
+			sleep(NEW_EMOTION_DELAY)
+			sock.sendto(NEUTRAL, (emotionControlIP, emotionControlPort))
+			print("Neutral")
+			sleep(NEW_EMOTION_DELAY)
+			sock.sendto(HAPPY, (emotionControlIP, emotionControlPort))
+			print("Happy")
+			sleep(NEW_EMOTION_DELAY)
+			sock.sendto(SAD, (emotionControlIP, emotionControlPort))
+			print("Sad")
+			sleep(NEW_EMOTION_DELAY)
+			sock.sendto(SAD, (emotionControlIP, emotionControlPort))
+			print("Sad")
+			sleep(NEW_EMOTION_DELAY)
 
-else:
-	sock.sendto(SAD, (UDP_IP, UDP_PORT))
-	print("Sad")
-	sleep(3)
-	sock.sendto(HAPPY, (UDP_IP, UDP_PORT))
-	print("Happy")
-	sleep(3)
-	sock.sendto(NEUTRAL, (UDP_IP, UDP_PORT))
-	print("Neutral")
-	sleep(3)
-	sock.sendto(ANGRY, (UDP_IP, UDP_PORT))
-	print("Angry")
-	sleep(3)
-	sock.sendto(NEUTRAL, (UDP_IP, UDP_PORT))
-	print("Neutral")
-	sleep(3)
-	sock.sendto(HAPPY, (UDP_IP, UDP_PORT))
-	print("Happy")
-	sleep(3)
-	sock.sendto(SAD, (UDP_IP, UDP_PORT))
-	print("Sad")
-	sleep(3)
-	sock.sendto(SAD, (UDP_IP, UDP_PORT))
-	print("Sad")
-	sleep(3)
+		print("Shutdown")
+		sock.sendto(SHUTDOWN, (emotionControlIP, emotionControlPort))
+		
+		sock.close()
+		
+	return
 
-print("Shutdown")
-sock.sendto(SHUTDOWN, (UDP_IP, UDP_PORT))
+if __name__ == "__main__":
+	main()
