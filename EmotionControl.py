@@ -1,118 +1,119 @@
 from time import sleep
-import pifacedigitalio, socket, sys
+import pifacedigitalio, socket, sys, binascii
 
 """
-	SYSC 3010 Sherlock Emotion Control
-	
-	Author: Robert Graham
-		100981086
-		Group F3
-	Date: 	31 March 2017
-	
-	Controller for the emotions of Sherlock. i.e. Two stepper motors
-	which control the position of the eyebrows and mouth seperately.
-	Emotion codes are recieved by the server and then emotions are updated
-	accordingly. Sherlock starts out in a default emotion and returns to
-	that emotion when shut down so that the state is always known.
-	
+	Eyebrows:
 	All degrees are measured from the horizontal facing right. i.e.
 	Positive is counter-clockwise and negative is clockwise
+	Mouth:
+	Vertical position down from mouth fully closed in 
+	
 """
 
+# Print information to console (for testing)
+VERBOSE = True
+
 # UDP constants
-SERVER_IP = "10.0.0.1" # TO-DO Confirm
+SERVER_IP = "127.0.0.1" #"10.0.0.1"
 SERVER_PORT = 2008
 BUFFER_SIZE = 1024
 
 # Number of attempts to make an initial connection to the server
 CONNECTION_ATTEMPTS = 3
 
+# Socket timeout in seconds
+TIMEOUT = 1
+
 # IDs of sysetem machines
-EMOTION_CONRTOL_ID = 2
-SERVER_ID = 5
+EMOTION_CONTROL_ID = b'\x02'
+SERVER_ID = b'\x05'
 
 # UDP emotion codes
-NEUTRAL_CODE = 1
-HAPPY_CODE = 2
-SAD_CODE = 3
-ANGRY_CODE = 4
-SHUTDOWN_CODE = 9
+NEUTRAL_CODE = b'\x00'
+HAPPY_CODE = b'\x01'
+SAD_CODE = b'\x02'
+ANGRY_CODE = b'\x03'
+SHUTDOWN_CODE = b'\xFF'
 
 # Positions of eyebrows and mouth respectively
-HAPPY_POS = (-15, 0)
-SAD_POS = (-45, 0)
-NEUTRAL_POS = (0, 0)
-ANGRY_POS = (45, 0)
+POSITIONS = ((0, 0.5), (0, 0), (-30, 1), (30, 0.5))
 
 # Position set to at shutdown
-DEFAULT_POS = NEUTRAL_POS
+DEFAULT_POS_INDEX = 0
 
 # Stepper motor pulses per second delay (min 0.0125 s = max 800 pps)
 PPS_DELAY = 0.02
 
 # PiFace
 pfd = pifacedigitalio.PiFaceDigital()
+ON = 1
+OFF = 0
+MOUTH_STEPPER_OFFSET = 4
 
 """
 	Rotates the eyebrows by the specified amount of degrees. Eyebrow
-	stepper motor must be connected to pins 4-8.
+	Stepper motor must be connected to pins 4-8.
 """
 def moveEyebrows(degrees):
-	# Half the amount of steps required. Half because two steps are
-	# performed in each loop.
-	halfSteps = int(float(degrees) / 360 * 512)
-	
-	# Counter-clockwise
-	if halfSteps >= 0:
-		pfd.output_pins[4].value = 1
-		for i in range(halfSteps):
-			pfd.output_pins[(i - 1) % 4 + 4].value = 0
-			pfd.output_pins[(i + 1) % 4 + 4].value = 1
-			sleep(PPS_DELAY)
-		
-	# Clockwise
-	else:
-		pfd.output_pins[6].value = 1
-		for i in range(-halfSteps, 0, -1):
-			pfd.output_pins[(i - 1) % 4 + 4].value = 1
-			pfd.output_pins[(i + 1) % 4 + 4].value = 0
-			sleep(PPS_DELAY)
-	
-	# Turn off all pins
-	for i in range(4, 8):
-		pfd.output_pins[i].value = 0
-
-	return
-
-"""
-	Rotates the mouth by the specified amount of degrees. Mouth
-	stepper motor must be connected to pins 0-3.
-"""
-def moveMouth(degrees):
 	# Double the amount of steps required. Double because two steps are
 	# performed in each loop.
-	halfSteps = int(float(degrees) / 360 * 512)
-
+    halfSteps = int(float(degrees) / 360 * 512)
+    
 	# Counter-clockwise
-	if halfSteps >= 0:
-		pfd.output_pins[0].value = 1
-		for i in range(halfSteps):
-			pfd.output_pins[(i - 1) % 4].value = 0
-			pfd.output_pins[(i + 1) % 4].value = 1
-			sleep(PPS_DELAY)
-
+    if halfSteps >= 0:
+        for i in range(halfSteps):
+            pfd.output_pins[(i - 1) % 4 + MOUTH_STEPPER_OFFSET].value = OFF
+            pfd.output_pins[(i + 1) % 4 + MOUTH_STEPPER_OFFSET].value = ON
+            sleep(PPS_DELAY)
+            
 	# Clockwise
-	else:
-		pfd.output_pins[6].value = 1
-		for i in range(-halfSteps, 0, -1):
-			pfd.output_pins[(i - 1) % 4].value = 1
-			pfd.output_pins[(i + 1) % 4].value = 0
-			sleep(PPS_DELAY)
+    else:
+        for i in range(-halfSteps, 0, -1):
+            pfd.output_pins[(i - 1) % 4 + MOUTH_STEPPER_OFFSET].value = ON
+            pfd.output_pins[(i + 1) % 4 + MOUTH_STEPPER_OFFSET].value = OFF
+            sleep(PPS_DELAY)
 	
-	# Turn off all pins		
-	for i in range(4):
-		pfd.output_pins[i].value = 0
+	# Turn off all pins
+    for i in range(4, 8):
+        pfd.output_pins[i].value = OFF
+        
+    return
 
+"""
+	Opens the mouth by the specified amount of openness. Mouth
+	stepper motor must be connected to pins 0-3.
+"""
+def moveMouth(openness):
+	# Double the amount of steps required. Double because two steps are
+	# performed in each loop.
+    halfSteps = int(openness * 200)
+    
+    # Counter-clockwise
+    if halfSteps >= 0:
+        for i in range(halfSteps):
+            pfd.output_pins[(i - 1) % 4].value = OFF
+            pfd.output_pins[(i + 1) % 4].value = ON
+            sleep(PPS_DELAY)
+            
+	# Clockwise
+    else:
+        for i in range(-halfSteps, 0, -1):
+            pfd.output_pins[(i - 1) % 4].value = ON
+            pfd.output_pins[(i + 1) % 4].value = OFF
+            sleep(PPS_DELAY)
+	
+	# Turn off all pins
+    for i in range(4):
+        pfd.output_pins[i].value = OFF
+        
+    return
+
+"""
+	Print to the console if in verbose mode. Should be used during testing only
+"""
+def Print(string):
+	if VERBOSE:
+		print string
 	return
 
 """
@@ -122,53 +123,85 @@ def moveMouth(degrees):
 	reset emotion to default position.
 """
 def main():
+	print "Emotion Controller"
+	print "Author:	Robert Graham 100981086"
+	print "Date:	4 March 2017\n"
 	pifacedigitalio.init()
 	# Current position of the eyebrows and mouth respectively
-	currentPosition = list(DEFAULT_POS)
-	
+	currentPosition = POSITIONS[DEFAULT_POS_INDEX]
+
 	# Address family: Internet protocol
 	# Socket kind: Datagram
-	socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	# Bind to any available port on the local machine
-	socket.bind(('localhost', 0))
+	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	sock.settimeout(TIMEOUT)
 	
-	# Link to server
-	for i in range(CONNECTION_ATTEMPTS):
-		socket.sendto(EMOTION_CONRTOL_ID, (TRAGET_IP, TARGET_PORT))
-		data, addr = socket.recvfrom(BUFFER_SIZE)
+    # Link to server
+	Print("Request server connection\n")
+	for i in range(CONNECTION_ATTEMPTS + 1):
+		
+		if i == CONNECTION_ATTEMPTS:
+			raise RuntimeError("Unable to connect to server")
+		
+		Print("Connection attempt " + str(i + 1))
+		
+		# Send emotion control ID to server
+		Print("Sending...")
+		Print("Data:\t" + binascii.hexlify(EMOTION_CONTROL_ID))
+		Print("IP:\t" + SERVER_IP)
+		Print("Port:\t%d" % SERVER_PORT)
+		sock.sendto(EMOTION_CONTROL_ID, (SERVER_IP, SERVER_PORT))
+		
+		# Attempt to receive a response from the server
+		try:
+			data, address = sock.recvfrom(BUFFER_SIZE)
+		except socket.timeout:
+			Print("Timed out\n")
+			continue
+		sock.settimeout(None)
+		Print("\nPacket received")
+		Print("Data:\t" + binascii.hexlify(data))
+		Print("IP:\t" + address[0])
+		Print("Port:\t%d" % address[1])
+		# Check if message is actually from the server
 		if data[0] == SERVER_ID:
 			break
-		elif i == CONNECTION_ATTEMPTS:
-			raise RuntimeError("Unable to connect to server")
 		else:
-			raise RuntimeError("Invalid server ID")
-
+			#raise RuntimeError("Unknown response")
+			Print("Unknown response")
+			
 	# Wait for emotion updates
 	while True:
-		data, addr = socket.recvfrom(1024)
-		emotionCode = data[3]
+		Print("\nWaiting for emotion codes...")
+		data, address = sock.recvfrom(BUFFER_SIZE)
+		code = data[1]
+		Print("Emotion code received")
+		Print("Data:\t" + binascii.hexlify(data))
+		Print("IP:\t" + address[0])
+		Print("Port:\t%d" % address[1])
 		
-		if emotionCode == HAPPY_CODE:
-			moveEyebrows(HAPPY_POS[0] - currentPosition[0])
-			currentPosition[0] = HAPPY_POS[0]
+		index = int(code.encode('hex'), 16)
 		
-		elif emotionCode == SAD_CODE:
-			moveEyebrows(SAD_POS[0] - currentPosition[0])
-			currentPosition[0] = SAD_POS[0]
+		if code >= b'\x00' and code <= b'\x04':
+			Print("\nUpdating emotion...")
+			moveEyebrows(POSITIONS[index][0] - currentPosition[0])
+			moveMouth(POSITIONS[index][1] - currentPosition[1])
+			currentPosition = POSITIONS[index]
+			Print("Current position: (" + str(currentPosition[0]) + ", " + str(currentPosition[1]) + ")")
 		
-		elif emotionCode == NEUTRAL_CODE:
-			moveEyebrows(NEUTRAL_POS[0] - currentPosition[0])
-			currentPosition[0] = NEUTRAL_POS[0]
-		
-		elif emotionCode == ANGRY_CODE:
-			moveEyebrows(ANGRY_POS[0] - currentPosition[0])
-			currentPosition[0] = ANGRY_POS[0]
-		
-		# Reset to default emotion and exit loop
-		elif emotionCode == SHUTDOWN_CODE:
-			moveEyebrows(DEFAULT_POS[0] - currentPosition[0])
+		elif code == b'\xFF':
+			Print("Resetting emotion...")
+			moveEyebrows(POSITIONS[DEFAULT_POS_INDEX][0] - currentPosition[0])
+			moveMouth(POSITIONS[DEFAULT_POS_INDEX][1] - currentPosition[1])
+			Print("Shut down")
 			break
+			
+		else:
+			Print("Invalid code")
 	
-	return
+	# CLean-up
+	sock.close()
+	for i in range(8):
+		pfd.output_pins[i].value = 0
 
-main()
+if __name__ == "__main__":
+	main()
