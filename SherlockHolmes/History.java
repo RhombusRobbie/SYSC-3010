@@ -25,14 +25,6 @@ import static java.lang.Boolean.TRUE;
 
 public class History extends AppCompatActivity {
 
-    //Notification builder for each notification
-   // NotificationCompat.Builder notification;
-
- //   private static String TAG = "History";
-
-    //Notification ID number. so the system knows how to handle each notifications
-  //  private static final int uniqueID = 45612;
-
     private static String TAG = "History";
 
     String eventText;
@@ -56,15 +48,7 @@ public class History extends AppCompatActivity {
         textViewobj = (TextView) findViewById(R.id.textView);
         //Trying to Receive the eventText from Service Activity
         Log.i(TAG, "Trying to Receive event from service");
-       // Intent intent3 = getIntent();
-        // Bundle extras = intent3.getExtras();
-
-       // event = extras.getString("eventText");
-       // event = intent3.getStringExtra(ServerService.EXTRA_MESSAGE);
-       // extras.putString("eventText", event);
-
-
-
+ 
         //eventText = ServerService.getEvent().getString();
         //To display the event on the page
         textViewobj = new TextView(this);
@@ -78,20 +62,13 @@ public class History extends AppCompatActivity {
 
         call_button = (Button) findViewById(R.id.callbutton);
 
-
-        /*
-        //Building the notification
-        notification = new NotificationCompat.Builder(this);
-        //we want to cancel the notification after the user has seen it and clicked
-        notification.setAutoCancel(true);
-        */
-
+       // create a Button listener for the call button. 
       call_button.setOnClickListener(new View.OnClickListener() {
           public void onClick(View view) {
 
-
+              //Create a call intent and Parse the Police number to this intent
               Intent callIntent = new Intent(Intent.ACTION_CALL);
-              callIntent.setData(Uri.parse("tel:6132996836"));
+              callIntent.setData(Uri.parse("tel:911"));
 
               //Gives the App Permission to Dial the Number
               if (ActivityCompat.checkSelfPermission(History.this,
@@ -104,57 +81,5 @@ public class History extends AppCompatActivity {
           }
       });
     }
-
-
-
-    /*
-
-        //Method to build the notification and
-        public void sendNotification ( String event){
-
-        //Notification Image
-        notification.setSmallIcon(R.drawable.sherlockholmes);
-
-        //Notification Sound
-        notification.setTicker("this is the Ticket");
-        //Time of the notification
-        notification.setWhen(System.currentTimeMillis());
-
-
-
-        notification.setContentTitle("URGENT!!! CHILD IN TROUBLE");
-        notification.setContentText("");
-
-
-        //What happens when the user clicks on the notification. send the user to the mainpage
-        Intent intent1 = new Intent(this, History.class);
-        //Giving the device access the intent in our app
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent1, PendingIntent.FLAG_UPDATE_CURRENT);
-        notification.setContentIntent(pendingIntent);
-
-        //send out the Notification and issue it(sending it to device)
-        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        //building it and sending it out
-
-            //Sends out notifcation only when event occurs
-                nm.notify(uniqueID, notification.build());
-
-    }*/
-    /*
-
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String str = intent.getStringExtra("DATA");
-            textViewobj.setText(str);
-        }
-    };*/
-
-    /*
-    void ondestroy(){
-        unregisterReceiver(b);
-    }*/
-
-
 }
 
