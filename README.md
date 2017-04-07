@@ -49,11 +49,11 @@ connected to the server and the server sends acknowledgement to approve the conn
 
 STARTING THE SMARTPHONE
 
-* Change Ip address of the Program to match the IP address of the network where the program is running
+* Change Ip address of the smartphone Application in the  to match the IP address of the network where the program is running
       *  Run command prompt on the computer being used
             * select ipv4 of wireless or ethernet depending on the connection
 	    
-* Change the Port to match the Server Port
+* Define a well known port for both the server and the Application
 
 *  Edit Manifest and Enable/Disable the Call and Network Permission
 
