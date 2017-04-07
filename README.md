@@ -42,13 +42,28 @@ RUNNING THE PROGRAM
 All the diffirent components of the project(Emotion control, smartphone Application, Communication control) are first
 connected to the server and the server sends acknowledgement to approve the connection.
 
+STARTING THE SMARTPHONE
+
+* Change Ip address of the Program to match the IP address of the network where the program is running
+      *  Run command prompt on the computer being used
+            * select ipv4 of wireless or ethernet depending on the connection
+	    
+* Change the Port to match the Server Port
+
+*  Edit Manifest and Enable/Disable the Call and Network Permission
+
+*  Open res - > values -> drag a notification picture to this directory
+
+* change the Emulator settings to Software 
+
+* Install the APK
 
 TERMINATION
 
 LIMITATIONS
 
 ASSUMPTIONS
-* 
+
 FEATURES
 
 
