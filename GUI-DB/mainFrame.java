@@ -34,13 +34,20 @@ public class mainFrame extends JFrame {
         //panel2.setPreferredSize(new Dimension(100,100));
         panel1.add(scrollPane);
         Button clear = new Button("Clear History");
+        Button ex = new Button("Exit");
         panel2.add(clear);
-        panel2.add(new Button("     Export History    "));
+        panel2.add(ex);
         //scrollPane.setSize(1000,3000);
         //setSize(1000,1000);     
         clear.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent ae){
             	textArea.setText(null);
+              }
+          }
+          );
+        ex.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent ae){
+            	System.exit(1);
               }
           }
           );

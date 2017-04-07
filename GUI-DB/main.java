@@ -30,29 +30,33 @@ public class main
 	 * For example, Communicator sends a packet contains only its ID, say 1, so at index 0 is the flag for Communicator.
 	 * we get InetAddress, Port of the packet and store it for later, then we set the flag at index 0 to 1 to avoid repeating. 
 	 */
-	
+	public main(){
+        db = new DB();
+        mf = new mainFrame();
+        Login lgn = new Login(mf,db);
+        shutdownHandler sdh = new shutdownHandler(db, this);
+		Runtime.getRuntime().addShutdownHook(sdh);
+		
+        //------------ Bot Initialize --------//
+        ChatterBotFactory factory = new ChatterBotFactory();
+        ChatterBot bot = null;
+		try {
+			bot = factory.create(ChatterBotType.PANDORABOTS, pandorabotAPI);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        botSession = bot.createSession();
+        //-----------------------------------//
+		
+	}
     /**
      * Constructor for objects of class main
      */
     public static void main(String args[])throws Exception
     {
-           db = new DB();
-           mf = new mainFrame();
-           Login lgn = new Login(mf,db);
-           shutdownHandler sdh = new shutdownHandler(db);
-   		   Runtime.getRuntime().addShutdownHook(sdh);
-           
-           
-           
-           
-           
-           //------------ Bot Initialize --------//
-           ChatterBotFactory factory = new ChatterBotFactory();
-           ChatterBot bot = factory.create(ChatterBotType.PANDORABOTS, pandorabotAPI);
-           botSession = bot.createSession();
-           //-----------------------------------//
-           
-           int[] initialCommunicationFlags = {0, 0, 0, 0}; 
+    	main m = new main();
+        int[] initialCommunicationFlags = {0, 0, 0, 0}; 
            
            // wait to receive something
         try{   
@@ -89,21 +93,26 @@ public class main
             	   }else if((triggeredKeyword=dbSearch(packet))!=null){
             		   // keyword found
             		   // 1) add event to history Database, 2) notify App.
-            		   if(!emotion.contains("happy")){
-            			   Update(triggeredKeyword+ " has been said, the child feels "+ emotion + "The original sentence is: " + (new String(packet.getData())));
-            		   }
+            		 
+            			  Update(triggeredKeyword+ " has been said, the child feels "+ emotion + "The original sentence is: " + message);
+            		   
             	   }else if(message.contains("game") && message.contains("play")){
             		   // play game.
             		   // send activation packet.
-            		   sendPacket("start", gameAddress, gamePort);
-            	   }else if(message.contains("game") && (message.contains("stop") || message.contains("quit"))){
-            		   // stop game.
-            		   // send termination packet.
-            		   sendPacket("stop", gameAddress, gamePort);
+            		   if(gameAddress!=null){
+            			   
+            		   
+            		   sendPacket("", gameAddress, gamePort); 
+            		   }
+					if(emotionAddress!=null){
+						sendBytePacket((byte)1, emotionAddress, emotionPort);
+					}
             	   }
                    // normal communication sending back random sentence.            		   
 					sendPacket(botSession.think(message), commAddress, commPort);
-					//sendEmotionPacket(emotionIdentifier(), emotionAddress, emotionPort);
+					if(emotionAddress!=null){
+						sendBytePacket(emotionIdentifier(), emotionAddress, emotionPort);
+					}
             	   break;
                case 3:
                 // from game
@@ -117,8 +126,6 @@ public class main
 					   //sending ack
 					   sendPacket("", gameAddress, gamePort);
             	   }
-            	   // pass it to Communicator.
-            	   sendPacket(new String(packet.getData()), commAddress, commPort);
             	   break;
                case 4:
                 // from mobile app
@@ -136,10 +143,12 @@ public class main
             	   // login verification.
             	   if(db.contains(login[0], login[1])){
             		   // send back YES message.
-            		   sendEmotionPacket((byte) 1, appAddress, appPort);
+            		   sendBytePacket((byte) 1, appAddress, appPort);
+            		   System.out.println("Sent YES to app");
             	   }else{
             		   // send back NO message.
-            		   sendEmotionPacket((byte) 0 , appAddress, appPort);
+            		   sendBytePacket((byte) 0 , appAddress, appPort);
+            		   System.out.println("Sent YES to app");
             	   }
             	   break;
                case 2:
@@ -152,7 +161,7 @@ public class main
             		   // flag to 1
             		   initialCommunicationFlags[1] = 1;
 					   //sending ack
-					   sendEmotionPacket((byte)5, emotionAddress, emotionPort);
+					   sendBytePacket((byte)5, emotionAddress, emotionPort);
             	   }
             	   break;
                default:
@@ -177,9 +186,13 @@ public class main
     	// first adding it to main frame, then database.
     	mf.update(event);
     	db.setEvent(event);
-    	
+    	if(emotionAddress!=null){
+			sendBytePacket(emotionIdentifier(), emotionAddress, emotionPort);
+		}
     	// sending notification to App after here.//
-    	sendPacket(event, appAddress, appPort);
+    	if(appAddress!=null){
+    	    sendPacket(event, appAddress, appPort);
+    	}
     	//----------------------------------------//
     }
     		/**
@@ -187,21 +200,24 @@ public class main
 		 * Happy - byte 1
 		 * Sad - byte 2
 		 * Angry - byte 3
-		 * ShutdownCode 0xFF
+		 * ShutdownCode 0xFF, used in shutdownHandler.class
 		 * */
     public static byte emotionIdentifier(){
 		switch(emotion){
 			case "happy":
+				emotion="neutral";
 				return 1;
 			case "sad":
+				emotion="neutral";
 				return 2;
 			case "neutral":
+				emotion="neutral";
 				return 0;
 			case "angry":
+				emotion="neutral";
 				return 3;
-			case "shut":
-				return (byte) 0xFF;
 			default:
+				emotion="neutral";
 				return 0;// neutral
 		}
 		
@@ -222,9 +238,10 @@ public class main
     	String msg = new String(createData(data, length)); // sentence without punctuation, to be converted to list of words for DB search.
     	String[] keywords = msg.split(" ");
     	for(String s: keywords){
-    		if((emotion=db.getEmotion(s)) != null){
+    		emotion=db.getEmotion(s);
+    		if(emotion != null && !emotion.equals("happy")){
     			return s;
-    		}
+    		}   
     	}
     	return null;
     }
@@ -258,7 +275,7 @@ public class main
 	}
     // for both the App and Emotion Controller.
 	// sendBytePacket
-    public static void sendEmotionPacket(byte byteValue, InetAddress ip, int port){
+    public static void sendBytePacket(byte byteValue, InetAddress ip, int port){
 		/**
 		 * Neutral - byte 0
 		 * Happy - byte 1
@@ -271,6 +288,7 @@ public class main
 		 dataholder[1] = byteValue;
 		 DatagramPacket p = new DatagramPacket(dataholder, 0, dataholder.length, ip, port);
 		 try{
+			 System.out.println("Sending to:"+ p.getAddress() + " " + p.getPort() + ": " + new String(p.getData()).trim());
 			 socket.send(p);
 		 }catch(Exception j){
 			 j.printStackTrace();
@@ -284,6 +302,7 @@ public class main
         dataholder[dataholder.length - 1] = 0;
         DatagramPacket p = new DatagramPacket(dataholder, 0, dataholder.length, ip, port);
     	try{
+    		System.out.println("Sending to:"+ p.getAddress() + " " + p.getPort() + ": " + new String(p.getData()).trim());
     		socket.send(p);
     		
     	}catch(Exception j){
@@ -291,7 +310,36 @@ public class main
     	}
     	
     }
+    /**
+     * Used by shutdownHandler, to retrieve IP's and Ports of Communicator, EmotionControl and Game
+     * @param id
+     */
+    public InetAddress getAddress(int id){
+    	switch(id){
+    	case 1:
+    		return commAddress;
+    	case 2:
+    		return emotionAddress;
+    	case 3:
+    		return gameAddress;
+    	}
+		return null;
+    }
+    public int getPort(int id){
+    	switch(id){
+    	case 1:
+    		return commPort;
+    	case 2:
+    		return emotionPort;
+    	case 3:
+    		return gamePort;
+    	}
+		return 0;
+    }
     
+    public void closeSocket(){
+    	socket.close();
+    }
     
 
 }

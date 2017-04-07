@@ -23,7 +23,7 @@ public class DB {
 		con = getConnection();
 		createTable("CREATE TABLE IF NOT EXISTS table1 (name varchar(15), pass varchar(15))");
 		createTable("CREATE TABLE IF NOT EXISTS table2 (keyword varchar(15), emotion varchar(15))");
-		createTable("CREATE TABLE IF NOT EXISTS history (event TEXT)");
+		createTable("CREATE TABLE IF NOT EXISTS history (event LONGTEXT)");
 		// load keyword emotion to table2.
 		
 		
