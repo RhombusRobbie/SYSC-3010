@@ -126,6 +126,9 @@ public class ComMain {
 	}
 	
 	//this method handles the general function of the communicator sub-system 
+	//Verify that the server is up and we can connect to it, 
+	//then enter the input send receive output loop.
+	
 	public void talk()
 	{
 		//this will test whether or not the server is currently online, the program will shut down if false is returned. 
@@ -142,7 +145,11 @@ public class ComMain {
 		while(!quit)
 		{
 			currentInput = ioHandler.getInput();
-			if(currentInput.equalsIgnoreCase("quit")) break;
+			if(currentInput.equalsIgnoreCase("quit")) 
+				{
+					System.out.println("ShuttingDown");
+					break;
+				}
 			
 			byte[] dataToServer = this.createData(currentInput);
 			

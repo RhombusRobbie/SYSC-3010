@@ -14,7 +14,7 @@ public class ComSendReceive {
 	private static int MAX_RETRIES = 4;
 	private static int SOCKET_TIMEOUT = 1000;
 	private static int MAX_BUFFER_SIZE = 600  ;
-	private static String SERVER_IP = "172.17.152.193";
+	private static String SERVER_IP = "172.17.131.174";
 	private static byte[] COM_SIGNITURE = {1,0};	
 	private boolean debug;
 	
@@ -81,10 +81,10 @@ public class ComSendReceive {
 		}
 		if(contactPacket == null)
 		{
-			if(debug)
-			{
+			//if(debug)
+			//{
 				System.out.println("There was no response, shutting down.");
-			}
+			//}
 			this.quit();
 			System.exit(0);
 		}

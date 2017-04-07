@@ -9,11 +9,9 @@ public class ComMainTest extends TestCase{
 	//tests for a valid initialization packet being received. 
 	public void testValidInitPacketReceived()
 	{
-		System.out.println("Test a valid establishContact using a Stub Server\n");
+		System.out.println("Test 1: a valid establishContact using a Stub Server\n");
 		boolean debug = true;
 		ComSendReceive sr = new ComSendReceive(debug);
-		ComIO io = new ComIO();
-		ComMain c = new ComMain(io, sr);
 		StubServerComValidInitialization stubServ = new StubServerComValidInitialization();
 		stubServ.start();
 		assertTrue("The valid message was not received from the stub server\n",sr.establishConnection());
@@ -22,11 +20,9 @@ public class ComMainTest extends TestCase{
 	
 	public void testInvalidInitPacketReceived()
 	{ 
-		System.out.println("Test an invalid establishContact using a Stub Server");
+		System.out.println("Test 2: an invalid establishContact using a Stub Server");
 		boolean debug = true;
 		ComSendReceive sr = new ComSendReceive(debug);
-		ComIO io = new ComIO();
-		ComMain c = new ComMain(io, sr);
 		StubServerInvalidInitialization stubServ = new StubServerInvalidInitialization();
 		stubServ.start();
 		assertFalse("The message returned as valid despite supposedly being invalid.\n", sr.establishConnection());
@@ -35,7 +31,7 @@ public class ComMainTest extends TestCase{
 	
 	public void testGetQuit(){
 		
-		System.out.println("Test: getQuit()");
+		System.out.println("Test 3: getQuit()");
 		boolean debug = true;
 		ComSendReceive sr = new ComSendReceive(debug);
 		ComIO io = new ComIO();
@@ -45,7 +41,7 @@ public class ComMainTest extends TestCase{
 	}
 	
 	public void testSetQuit(){
-		System.out.println("Test: setQuit()");
+		System.out.println("Test 4: setQuit()");
 		boolean debug = true;
 		ComSendReceive sr = new ComSendReceive(debug);
 		ComIO io = new ComIO();
@@ -56,6 +52,7 @@ public class ComMainTest extends TestCase{
 	
 	public void testCreateData()
 	{
+		System.out.println("Test 5: createData() with valid input");
 		boolean debug = true;
 		ComSendReceive sr = new ComSendReceive(debug);
 		ComIO io = new ComIO();
@@ -70,5 +67,7 @@ public class ComMainTest extends TestCase{
 	{
 		
 	}
+	
+	
 
 }

@@ -11,6 +11,7 @@ public class ComIO {
 	
 	public ComIO()
 	{
+		voce.SpeechInterface.init("../../../lib", true, false, "", "");
 		newInput  = new Scanner(System.in);
 	}
 	
@@ -18,12 +19,13 @@ public class ComIO {
 	{
 		//System.out.println("test");
 		String s = newInput.nextLine();
-		//newInput.close();
+		//System.out.println(s.length());
 		return s;
 	}
 	
 	public void output(String s)
 	{
+		voce.SpeechInterface.synthesize(s);
 		System.out.println(s);
 	}
 	
@@ -31,4 +33,5 @@ public class ComIO {
 	{
 		newInput.close();
 	}
+	
 }
