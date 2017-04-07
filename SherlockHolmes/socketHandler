@@ -1,0 +1,19 @@
+package com.example.adebola.sherlockholmes;
+
+import java.net.DatagramSocket;
+
+/**
+ * Created by Adebola on 2017-04-06.
+ */
+
+public class socketHandler {
+    private static DatagramSocket socket;
+
+    public static synchronized DatagramSocket getSocket(){
+
+        return socket;
+    }
+    public static synchronized void setSocket(DatagramSocket s){
+        socket = s;
+    }
+}
