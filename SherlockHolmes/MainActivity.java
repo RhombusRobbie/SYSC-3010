@@ -39,14 +39,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         Username = (EditText) findViewById(R.id.editText);
         Password = (EditText) findViewById(R.id.editText2);
         //Printout Logs of the activity on MainPage
         Log.i(TAG, "OnCreate");
+
         try {
             s = new DatagramSocket();
         }catch(Exception e ){System.out.println(e);}
-
+        socketHandler.setSocket(s);
         // This is just to display wrong password Text for invalid password
         WrongPassword = (TextView)findViewById(R.id.textView3);
         WrongPassword.setVisibility(View.GONE);
@@ -92,7 +94,8 @@ public class MainActivity extends AppCompatActivity {
 
             //Printout Logs of the activity on MainPage
             Log.i(TAG, "OnClick: about to Try the ip ");
-            InetAddress local = InetAddress.getByName("172.17.152.193");
+            //InetAddress local = InetAddress.getByName("192.168.2.111");
+            InetAddress local = InetAddress.getByName("172.17.131.174");
             //Used to implement the packet the delivery service. Information for the delivery is
             //contained within the datagramPacket
             Log.i(TAG, "OnClick: after ip ");
@@ -102,13 +105,13 @@ public class MainActivity extends AppCompatActivity {
             s.send(p);
 
             //DELETE THIS COMMENT when you ready to run the code
-            /*
+
             //The program waits for a response from the server before proceeding
             //Receiving back the acknowledge that the username and password is correct
             byte[] data = new byte[2];
             p = new DatagramPacket(data, 2);
             s.receive(p);
-             */
+
             //Printout Logs of the activity on MainPage
             Log.i(TAG, "OnClick: udpSend: Sent");
         } catch (IOException e) {
@@ -121,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
         if(p.getData()[1] == 1 && p.getData()[0] == 5){ // 51
 
             //Allow access when the right password has be received
-            Intent intent = new Intent(this, Mainpage.class);
+            Intent intent = new Intent(this, History.class);
             startActivity(intent);
         }else { // 50
             //Wrong Password
@@ -137,20 +140,11 @@ public class MainActivity extends AppCompatActivity {
             toast.show();
 
             Log.i(TAG, "Prompt for The right UserName and Password");
+            /*
             //Call the intent again if the wrong password and username is entered
             Intent intent1 = new Intent(this, Mainpage.class);
-            startActivity(intent1);
+            startActivity(intent1); */
 
         }
     }
-
-    /*
-
-                        Context context = getApplicationContext();
-                        CharSequence text = "Wrong Message From Server";
-                        int duration = Toast.LENGTH_SHORT;
-
-                        Toast toast = Toast.makeText(context, text, duration);
-                        toast.show();
-    }*/
 }
