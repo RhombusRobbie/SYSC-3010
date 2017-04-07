@@ -11,17 +11,22 @@ import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.net.Socket;
+import java.util.logging.SocketHandler;
+
 public class Mainpage extends AppCompatActivity {
 
 
     //Tag name for checking the Log
     private static final String TAG = "MainPage";
+        Intent intent4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mainpage);
-
+      //  intent4 = new Intent(this, History.class);
+       // ServerService service = new ServerService();
         //Intent for the Service... This runs the ServerService when the App is Logged in
         Intent ServiceIntent = new Intent(this, ServerService.class);
         startService(ServiceIntent);
@@ -56,12 +61,16 @@ public class Mainpage extends AppCompatActivity {
         Log.i(TAG, "OnResume");
     }
 
+
+    // Shows history of the event when the History button is clicked
     public void History(View view){
         //Intent class does something when this method is called. Takes two parameters
         //the context and the class. MainPage is entered when user clicks button
 
-          Intent intent = new Intent(this, History.class);
+        Log.i(TAG, "History Button Clicked");
+
           //Start the Next Activity that contains the history
-          startActivity(intent);
+          startActivity(intent4);
+        Log.i(TAG, "After the History activity is started");
     }
 }
