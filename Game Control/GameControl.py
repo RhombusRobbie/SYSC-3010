@@ -1,52 +1,80 @@
-import socket, sys, time, pifacedigitalio, random, binascii
-			
-#Constant declarations			
-MAX_ROUNDS = 5
+import socket, sys, pifacedigitalio
+from time import sleep
+from random import randint
+from binascii import hexlify
+
+"""
+	Game Control
+	Sherlock Child Monitoring System
+	Author:		Robert Graham & Alex Robertson
+	Date:		7 April 2017
+	
+	Game control is used for an implementation of Simon Says,
+	a game where the player must copy a light sequence. As the
+	game progresses, more steps are added to the sequence until
+	either the player incorrectly reproduces the sequence or
+	reaches the maximum number of rounds.
+"""
+
+# Game control extras	
 ON = 1
 OFF = 0
-SERVER_IP = '127.0.0.1'
+LED_OFFSET = 2	
+MAX_ROUNDS = 5
+VERBOSE = True
+
+# UDP
+SERVER_IP = "127.0.0.1"
 SERVER_PORT = 2008
+BUFFER_SIZE = 1024
+
+# Server connection
 CONNECTION_ATTEMPTS = 3
+TIMEOUT = 1
+
+# Component IDs
 SIMON_ID = b'\x03'
 SERVER_ID = b'\x05'
-LIGHT_ONE = 0
-LIGHT_TWO = 1
-LIGHT_THREE = 2
-LIGHT_FOUR = 3
-LIGHT_OFFSET = 2
-BUFFER_SIZE = 1024
-TIMEOUT = 1
-VERBOSE = True
-random.seed()
   
 
-# Flash the lights 3 times to indicate the user failed the level
+# Flash the lights to indicate the player lost the game
 def failLights():
-	for i in range(7):
-		pfd.output_pins[LIGHT_ONE].value = ON
-		pfd.output_pins[LIGHT_TWO].value = ON
-		pfd.output_pins[LIGHT_THREE].value = ON
-		pfd.output_pins[LIGHT_FOUR].value = ON
-		time.sleep(0.5)
-		pfd.output_pins[LIGHT_ONE].value = OFF
-		pfd.output_pins[LIGHT_TWO].value = OFF
-		pfd.output_pins[LIGHT_THREE].value = OFF
-		pfd.output_pins[LIGHT_FOUR].value = OFF
+	for i in range(3):
+		for j in range(3):
+			pfd.output_pins[j + LED_OFFSET].value = ON
+		sleep(0.5)
+		for j in range(3):
+			pfd.output_pins[j + LED_OFFSET].value = OFF
+		sleep(0.5)
 	return
 
+# Flutter the lights to indicate the player won the game
 def winLights():
-	for f in range(3):
-		for i in range(3):
-			pfd.output_pins[i].value = 1
-			time.sleep(0.1)
-			pfd.output_pins[i].value = 0
+	for i in range(3):
+		for j in range(3):
+			pfd.output_pins[j + LED_OFFSET].value = ON
+			sleep(0.1)
+			pfd.output_pins[j + LED_OFFSET].value = OFF
+	return
+
+# Flicker the lights to indicate the game is about to begin
+def startLights():
+	for i in range(3):
+		pfd.output_pins[0 + LED_OFFSET].value = ON
+		pfd.output_pins[1+ LED_OFFSET].value = OFF
+		pfd.output_pins[2+ LED_OFFSET].value = ON
+		pfd.output_pins[3+ LED_OFFSET].value = OFF
+		sleep(0.1)
+		pfd.output_pins[0 + LED_OFFSET].value = OFF
+		pfd.output_pins[1+ LED_OFFSET].value = ON
+		pfd.output_pins[2+ LED_OFFSET].value = OFF
+		pfd.output_pins[3+ LED_OFFSET].value = ON
+		sleep(0.1)
 	return
 
 def udpSend(s, address, state):
    address = (SERVER_IP , SERVER_PORT)
    s.sendto(state, address)
-
-pfd = pifacedigitalio.PiFaceDigital()
 
 def Print(string):
 	if VERBOSE:
@@ -54,8 +82,8 @@ def Print(string):
 	return
 
 def main():
-
-# Instruction list
+    pfd = pifacedigitalio.PiFaceDigital()
+    # Instruction sequence
     lst = []
     rounds = 0
     lost = False
