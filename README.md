@@ -14,6 +14,12 @@ Project Members
 	
         Adebola
 
+Github navigation:
+	Communication Control - contains all file used for running and testing the Communicator Control.
+	Emotion Control - contains all the files used for running and testing the Emotion Control.
+	GUI-DB contains all files used to set up and run the server.
+	Game Control - contains all the files used for running and testing the Game Control.
+	SherlockHolmes - contains the files for the Android app.
 =================================================================================================================
 =================================================================================================================
 =================================================================================================================
