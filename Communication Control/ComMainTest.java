@@ -65,6 +65,12 @@ public class ComMainTest extends TestCase{
 	
 	public void testExtractData()
 	{
+		ComSendReceive sr = new ComSendReceive(debug);
+		ComIO io = new ComIO();
+		ComMain c = new ComMain(io,sr);
+		String s = "hello";
+		byte[] w = c.createData(s);
+		assertTrue("The returned string should equal the initial string", s.compareTo(c.extractData(w)));
 		
 	}
 	
