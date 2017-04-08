@@ -1,3 +1,5 @@
+import java.net.DatagramPacket;
+
 import junit.framework.TestCase;
 
 
@@ -65,13 +67,15 @@ public class ComMainTest extends TestCase{
 	
 	public void testExtractData()
 	{
+		boolean debug = true;
 		ComSendReceive sr = new ComSendReceive(debug);
 		ComIO io = new ComIO();
 		ComMain c = new ComMain(io,sr);
 		String s = "hello";
 		byte[] w = c.createData(s);
-		assertTrue("The returned string should equal the initial string", s.compareTo(c.extractData(w)));
-		
+		DatagramPacket p = sr.createPacket(w);
+		String f = c.extractData(p);
+		assertTrue("The returned string should equal the initial string", s.equals(f));		
 	}
 	
 	

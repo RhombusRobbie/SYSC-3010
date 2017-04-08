@@ -11,7 +11,7 @@ public class ComIO {
 	
 	public ComIO()
 	{
-		voce.SpeechInterface.init("../../../lib", true, false, "", "");
+		
 		newInput  = new Scanner(System.in);
 	}
 	
@@ -25,7 +25,7 @@ public class ComIO {
 	
 	public void output(String s)
 	{
-		voce.SpeechInterface.synthesize(s);
+		
 		System.out.println(s);
 	}
 	
