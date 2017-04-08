@@ -63,12 +63,20 @@ STARTING THE SMARTPHONE
 
 * Install the APK
 
-TERMINATION
+SET UP AND RUN FOR: EMOTION CONTROLLER
 
-LIMITATIONS
+Edit the value of the server's IP to it's current IP by changing the value at SERVER_IP 
 
-ASSUMPTIONS
+After that, simply run the python file via the command line.
 
-FEATURES
+SET UP AND RUN FOR: GAME CONTROLLER
 
+Edit the value of the server's IP to it's current IP by changing the value at SERVER_IP 
 
+After that, simply run the python file via the command line.
+
+SET UP AND RUN FOR: COMMUNICATION CONTROL
+
+Edit the IP in ComSendReceive, by chaning the value of SERVER_IP. 
+
+compile the project into an executable jar and run it with java -jar jarName.jar 
